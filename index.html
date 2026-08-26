@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Inventario Trimestral · Extruplesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root{
+    --bg:#f2f3f5;
+    --panel:#ffffff;
+    --ink:#232323;
+    --ink-soft:#7a7a7a;
+    --line:#e3e5e2;
+    --graphite:#464646;
+    --green-dark:#2f6b2c;
+    --green:#6cb33f;
+    --accent:#6cb33f;
+    --accent-dark:#4f8f30;
+    --ok:#2f6b2c;
+    --danger:#c0392b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:'Poppins',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body{padding-bottom:90px;}
+  h1,h2,h3{margin:0;}
+  button{font-family:inherit;}
+
+  /* ---------- Header ---------- */
+  header{
+    background:linear-gradient(160deg,#525252 0%,#3a3a3a 100%);
+    color:#fff;
+    padding:18px 18px 14px;
+    position:sticky; top:0; z-index:30;
+    box-shadow:0 6px 20px rgba(0,0,0,.22);
+  }
+  .brand-row{display:flex;align-items:center;gap:12px;}
+  .logo-chip{
+    flex:none;background:#fff;border-radius:12px;padding:8px 12px;
+    box-shadow:0 3px 8px rgba(0,0,0,.18);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .logo-img{display:block;height:38px;width:auto;}
+  .brand-text{line-height:1.15;}
+  .brand-name{font-size:10.5px;font-weight:600;letter-spacing:1.6px;color:#b9bcb6;text-transform:uppercase;}
+  .app-title{font-size:18.5px;font-weight:700;letter-spacing:.1px;margin-top:2px;color:#fff;}
+  .operario-row{display:flex;align-items:center;gap:8px;margin-top:14px;}
+  .operario-row input{
+    flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;
+    border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:'Poppins',sans-serif;
+    transition:border-color .15s, background .15s;
+  }
+  .operario-row input:focus{outline:none;border-color:var(--green);background:rgba(255,255,255,.12);}
+  .operario-row input::placeholder{color:#9d9f9a;}
+  .quarter-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .quarter-row input{
+    flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;
+    border-radius:10px;padding:9px 10px;font-size:14px;font-weight:600;font-family:'Poppins',sans-serif;
+  }
+  .quarter-row button.icon-btn{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#dfe1dc;border-radius:10px;
+    padding:8px 14px;font-size:12px;font-weight:600;font-family:'Poppins',sans-serif;
+  }
+
+  .tabs{display:flex;gap:6px;margin-top:14px;background:rgba(0,0,0,.18);padding:4px;border-radius:12px;}
+  .tab{
+    flex:1;text-align:center;padding:10px 6px;border-radius:9px;
+    background:transparent;color:#c4c6c1;font-weight:600;font-size:13.5px;
+    border:1px solid transparent;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(108,179,63,.4);font-weight:700;}
+
+  main{padding:16px 12px 12px;max-width:640px;margin:0 auto;}
+
+  .panel{background:var(--panel);border-radius:16px;padding:16px;margin-bottom:14px;
+    border:1px solid var(--line);box-shadow:0 2px 10px rgba(30,30,30,.04);}
+  .panel h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink-soft);
+    margin-bottom:12px;font-weight:600;}
+
+  /* ---------- Search ---------- */
+  .search-wrap{position:relative;}
+  .search-wrap input{
+    width:100%;padding:13px 14px 13px 40px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:15px;background:#fbfbfa;font-family:'Poppins',sans-serif;transition:border-color .15s;
+  }
+  .search-wrap input:focus{outline:none;border-color:var(--green);background:#fff;}
+  .search-wrap svg{position:absolute;left:13px;top:14px;width:17px;height:17px;stroke:var(--ink-soft);}
+
+  .item-list{margin-top:12px;max-height:260px;overflow-y:auto;border-radius:10px;}
+  .item-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 8px;border-bottom:1px solid var(--line);cursor:pointer;
+    border-radius:10px;transition:background .12s;
+  }
+  .item-row:last-child{border-bottom:none;}
+  .item-row:active{background:#f4f6f2;}
+  .item-name{font-weight:600;font-size:14.5px;letter-spacing:.1px;}
+  .item-code{font-size:11.5px;color:var(--ink-soft);margin-top:1px;font-weight:500;}
+  .item-add{
+    width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none;
+    box-shadow:0 2px 6px rgba(108,179,63,.4);
+  }
+  .item-right{display:flex;align-items:center;gap:8px;}
+  .item-photo-btn{
+    width:30px;height:30px;border-radius:50%;background:#eef0eb;color:var(--ink-soft);border:none;
+    display:flex;align-items:center;justify-content:center;flex:none;font-size:14px;
+  }
+  .item-photo-btn.has-photo{background:#e4f1da;color:var(--accent-dark);}
+  .item-photo-btn img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+  .empty-hint{color:var(--ink-soft);font-size:13.5px;padding:16px 4px;text-align:center;}
+
+  .recognize-btn{
+    flex:none;width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:#fbfbfa;
+    display:flex;align-items:center;justify-content:center;color:var(--accent-dark);font-size:19px;
+  }
+  .recognize-row{display:flex;gap:8px;align-items:stretch;}
+  .recognize-row .search-wrap{flex:1;}
+
+  /* ---------- Quick-add card (modal sheet) ---------- */
+  .sheet-overlay{
+    position:fixed;inset:0;background:rgba(20,20,20,.5);z-index:50;
+    display:flex;align-items:flex-end;backdrop-filter:blur(1px);
+  }
+  .sheet{
+    background:#fff;width:100%;border-radius:22px 22px 0 0;padding:20px 18px 24px;
+    animation:up .2s cubic-bezier(.2,.8,.2,1);box-shadow:0 -8px 30px rgba(0,0,0,.2);
+  }
+  @keyframes up{from{transform:translateY(20px);opacity:.4}to{transform:translateY(0);opacity:1}}
+  .sheet-title{font-size:16px;font-weight:700;margin-bottom:2px;}
+  .sheet-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;font-weight:500;}
+  .mode-toggle{display:flex;gap:6px;background:#eef0eb;padding:4px;border-radius:11px;margin-bottom:14px;}
+  .mode-btn{flex:1;padding:9px 6px;border-radius:8px;border:none;background:transparent;
+    color:var(--ink-soft);font-weight:600;font-size:12.5px;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+  .mode-btn.active{background:#fff;color:var(--accent-dark);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+  .field-row{display:flex;gap:10px;margin-bottom:11px;}
+  .field{flex:1;}
+  .field label{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;letter-spacing:.2px;}
+  .field input, .field select{
+    width:100%;padding:12px 11px;border-radius:11px;border:1.5px solid var(--line);font-size:16px;
+    background:#fbfbfa;font-family:'Poppins',sans-serif;transition:border-color .15s;
+  }
+  .field input:focus{outline:none;border-color:var(--green);}
+  .chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+  .chip{
+    padding:6px 11px;border-radius:20px;border:1.5px solid var(--line);background:#fbfbfa;
+    color:var(--ink-soft);font-size:12px;font-weight:600;font-family:'Poppins',sans-serif;
+  }
+  .chip.active{background:var(--green);border-color:var(--green);color:#fff;}
+  .stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:11px;overflow:hidden;background:#fbfbfa;}
+  .stepper button{width:40px;height:46px;background:#eef0eb;border:none;font-size:19px;font-weight:700;color:var(--ink);}
+  .stepper button:active{background:#e2e5dd;}
+  .stepper input{flex:1;text-align:center;border:none;background:transparent;font-size:16px;padding:0;font-family:'Poppins',sans-serif;}
+  .calc-preview{
+    background:#eef7e7;border:1.5px dashed var(--green);border-radius:12px;padding:12px 12px;
+    margin:8px 0 16px;font-size:14.5px;font-weight:700;color:var(--accent-dark);text-align:center;
+    letter-spacing:.2px;
+  }
+  .sheet-actions{display:flex;gap:10px;}
+  .btn{
+    flex:1;padding:14px 10px;border-radius:12px;border:none;font-weight:700;font-size:15px;
+    font-family:'Poppins',sans-serif;transition:transform .1s, opacity .1s;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-cancel{background:#eef0eb;color:var(--ink);}
+  .btn-confirm{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(108,179,63,.35);}
+  .btn-confirm:active{background:var(--accent-dark);}
+  .manual-toggle{font-size:12.5px;color:var(--accent-dark);font-weight:700;margin-bottom:12px;display:inline-block;
+    border-bottom:1.5px dashed var(--accent-dark);padding-bottom:1px;}
+  .cand-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .cand-row:last-child{border-bottom:none;}
+  .cand-row img{width:48px;height:48px;object-fit:cover;border-radius:9px;border:1.5px solid var(--line);flex:none;}
+  .cand-info{flex:1;min-width:0;}
+  .cand-name{font-weight:600;font-size:14px;}
+  .btn-mini-confirm{
+    flex:none;padding:8px 12px;border-radius:9px;border:none;background:var(--green);color:#fff;
+    font-weight:700;font-size:12.5px;font-family:'Poppins',sans-serif;
+  }
+
+  /* ---------- Entries table ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:10.5px;text-transform:uppercase;
+    letter-spacing:.4px;padding:7px 6px;border-bottom:1.5px solid var(--line);}
+  td{padding:9px 6px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .row-del{color:var(--danger);font-weight:700;font-size:16px;background:none;border:none;padding:2px 6px;}
+  .totals-row td{font-weight:700;background:#f7f8f6;}
+  .grand td{font-weight:800;background:#e9f4e2;color:var(--accent-dark);border-radius:8px;}
+  .scroll-table{max-height:280px;overflow-y:auto;}
+  .muted{color:var(--ink-soft);font-size:12px;}
+
+  /* ---------- Bottom bar ---------- */
+  .bottombar{
+    position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);
+    display:flex;gap:10px;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));
+    z-index:30;box-shadow:0 -6px 20px rgba(0,0,0,.06);
+  }
+  .bottombar button{flex:1;padding:13px 8px;border-radius:12px;font-weight:700;font-size:13.5px;border:none;
+    font-family:'Poppins',sans-serif;transition:transform .1s;}
+  .bottombar button:active{transform:scale(.97);}
+  .bb-export{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;
+    box-shadow:0 4px 12px rgba(108,179,63,.35);}
+  .bb-import{background:#eef0eb;color:var(--ink);}
+
+  .modal{position:fixed;inset:0;background:rgba(20,20,20,.5);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .modal-box{background:#fff;border-radius:18px;padding:18px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;
+    box-shadow:0 12px 40px rgba(0,0,0,.25);}
+  .modal-box h3{font-size:15.5px;margin-bottom:8px;font-weight:700;}
+  .modal-box textarea{width:100%;height:160px;border:1.5px solid var(--line);border-radius:11px;padding:11px;font-size:13px;font-family:monospace;}
+  .modal-box .muted{margin:6px 0 12px;}
+  .modal-actions{display:flex;gap:10px;margin-top:12px;}
+
+  .toast{
+    position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+    background:#2f2f2f;color:#fff;padding:11px 18px;border-radius:30px;font-size:13.5px;
+    font-weight:600;z-index:80;opacity:0;transition:opacity .2s;pointer-events:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.25);
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="logo-chip"><img src="data:image/png;base64,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" alt="Extruplesa" class="logo-img"></div>
+    <div class="brand-text">
+      <div class="brand-name">Extrusión de plásticos</div>
+      <div class="app-title">Inventario Trimestral</div>
+    </div>
+  </div>
+  <div class="operario-row">
+    <input id="operarioInput" type="text" placeholder="Tu nombre (operario)">
+  </div>
+  <div class="quarter-row">
+    <input id="quarterInput" type="text" value="">
+    <button class="icon-btn" id="btnResetQuarter">Hoy</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-mod="productos">Productos</div>
+    <div class="tab" data-mod="mp">Materias primas</div>
+  </div>
+</header>
+
+<main>
+  <div class="panel">
+    <h2 id="searchLabel">Buscar producto</h2>
+    <div class="recognize-row">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="searchInput" type="text" placeholder="Nombre o código...">
+      </div>
+      <button class="recognize-btn" id="btnRecognize" title="Reconocer perfil por foto">📷</button>
+    </div>
+    <input type="file" id="recognizeFileInput" accept="image/*" capture="environment" style="display:none;">
+    <input type="file" id="perfilFileInput" accept="image/*" capture="environment" style="display:none;">
+    <div class="item-list" id="itemList"></div>
+  </div>
+
+  <div class="panel">
+    <h2 id="entriesLabel">Conteos añadidos (este trimestre)</h2>
+    <div class="scroll-table" id="entriesTableWrap">
+      <table id="entriesTable"><thead></thead><tbody></tbody></table>
+    </div>
+    <div class="empty-hint" id="entriesEmpty">Todavía no hay conteos añadidos.</div>
+  </div>
+
+  <div class="panel">
+    <h2 id="totalsLabel">Totales por producto</h2>
+    <div class="scroll-table" id="totalsTableWrap">
+      <table id="totalsTable"><thead></thead><tbody></tbody></table>
+    </div>
+  </div>
+</main>
+
+<div class="bottombar">
+  <button class="bb-import" id="btnImport">Importar lista</button>
+  <button class="bb-export" id="btnExport">Guardar en Drive/OneDrive</button>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- Import modal -->
+<div class="modal" id="importModal" style="display:none;">
+  <div class="modal-box">
+    <h3>Importar lista maestra</h3>
+    <p class="muted" id="importHint">Una línea por producto, formato: <b>codigo;nombre</b>. Esto sustituye la lista actual de este módulo.</p>
+    <span class="manual-toggle" id="restoreCatalogBtn">Cargar aquí el catálogo completo de Extruplesa</span>
+    <textarea id="importArea" placeholder="OF26-001684;PANEL 333 GRECADO&#10;A100;PANEL 500 LISO"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" id="importCancel">Cancelar</button>
+      <button class="btn btn-confirm" id="importConfirm">Guardar lista</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ Estado y persistencia ============ */
+function currentQuarterLabel(){
+  const d = new Date();
+  const q = Math.floor(d.getMonth()/3)+1;
+  return d.getFullYear()+'-T'+q;
+}
+
+let state = {
+  quarter: currentQuarterLabel(),
+  activeModule: 'productos', // 'productos' | 'mp'
+  operario: (function(){try{return localStorage.getItem('inv_operario')||'';}catch(e){return '';}})()
+};
+
+const LS = {
+  master: mod => 'inv_master_'+mod,
+  entries: (mod,q) => 'inv_entries_'+mod+'_'+q,
+  quarter: 'inv_last_quarter'
+};
+
+function genId(){ return 'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+let storageBroken = false;
+function loadMaster(mod){
+  let list;
+  try{ list = JSON.parse(localStorage.getItem(LS.master(mod))||'[]'); }catch(e){ list = []; }
+  let changed = false;
+  list.forEach(it=>{ if(!it._id){ it._id = genId(); changed = true; } });
+  if(changed) saveMaster(mod, list);
+  return list;
+}
+function saveMaster(mod,list){
+  try{
+    localStorage.setItem(LS.master(mod), JSON.stringify(list));
+    return true;
+  }catch(e){
+    storageBroken = true;
+    console.warn('No se pudo guardar en localStorage (posible bloqueo de file://):', e);
+    return false;
+  }
+}
+
+function loadEntries(mod,q){
+  try{ return JSON.parse(localStorage.getItem(LS.entries(mod,q))||'[]'); }catch(e){ return []; }
+}
+function saveEntries(mod,q,list){
+  try{
+    localStorage.setItem(LS.entries(mod,q), JSON.stringify(list));
+    return true;
+  }catch(e){
+    storageBroken = true;
+    console.warn('No se pudo guardar el conteo (posible bloqueo de file://):', e);
+    showToast('⚠️ No se pudo guardar — abre el archivo desde un servidor local, no con doble clic');
+    return false;
+  }
+}
+
+const CATALOGO_PRODUCTOS = [{"codigo":"8006","nombre":"PERFIL 40 X 20 X 3 MM","precio":null,"longitudes":[3000]},{"codigo":"8013","nombre":"ANGULO 45 X 45","precio":1.59,"longitudes":[6000]},{"codigo":"8014","nombre":"LAMA VENTILADOR","precio":0.71,"longitudes":[318]},{"codigo":"8019","nombre":"PERFIL H POLIURETANOS","precio":0.43,"longitudes":[6000]},{"codigo":"8023","nombre":"PERFIL U 50 X 18","precio":1.09,"longitudes":[6000]},{"codigo":"8033","nombre":"PERFIL VALLA CONCAVO","precio":2.64,"longitudes":[6000]},{"codigo":"8034","nombre":"PERFIL VALLA CONVEXO","precio":2.68,"longitudes":[6000]},{"codigo":"8038","nombre":"PERFIL PROT. BORDE AGUJERO","precio":1.48,"longitudes":[1000]},{"codigo":"8045","nombre":"JUNTA RIGIDA EXAFAN","precio":0.86,"longitudes":[6000]},{"codigo":"8547","nombre":"MARCO VENTILADOR","precio":1.59,"longitudes":[3000]},{"codigo":"8517","nombre":"LAMA DSC","precio":0.6,"longitudes":[3500]},{"codigo":"8059","nombre":"PERFIL55 X 35 VALLAS C/RANURA (5 € MARZO)","precio":4.25,"longitudes":[2000]},{"codigo":"8069","nombre":"JUNQUILLO OSYMA","precio":0.13,"longitudes":[900000]},{"codigo":"8085","nombre":"BERENJENO 20","precio":0.26,"longitudes":[2500]},{"codigo":"8086","nombre":"BERENJENO 25","precio":0.41,"longitudes":[2500]},{"codigo":"8087","nombre":"BERENJENO 30","precio":0.43,"longitudes":[2500]},{"codigo":"8089","nombre":"LAMA DQJ","precio":0.6,"longitudes":[3500]},{"codigo":"8098","nombre":"PERFIL 70 X 18 (blanco piscina)","precio":1.55,"longitudes":[6000]},{"codigo":"8101","nombre":"TUBO KITI","precio":0.69,"longitudes":[750]},{"codigo":"8111","nombre":"TUBO 25 X 2 VERDE","precio":0.67,"longitudes":[2000]},{"codigo":"812152","nombre":"TUBO 21 FAEX SIN ROSCA","precio":0.46,"longitudes":[580]},{"codigo":"812152","nombre":"TUBO 21 FAEX CON ROSCA","precio":0.59,"longitudes":[410]},{"codigo":"8123","nombre":"TUBO 22 X 22","precio":0.76,"longitudes":[1630]},{"codigo":"81284","nombre":"CAMISA PISTON PIKOLIN TUBO 28","precio":0.82,"longitudes":[280]},{"codigo":"8134","nombre":"TUBO 33 X 3 GALICAN","precio":1.27,"longitudes":[2000]},{"codigo":"8201","nombre":"POSTE CUATRO CARAS BLANCO","precio":9.22,"longitudes":[6000]},{"codigo":"8202","nombre":"PERFIL ADAPTADOR BLANCO","precio":2.06,"longitudes":[6000]},{"codigo":"8210","nombre":"85 ALAS","precio":1.71,"longitudes":[6000]},{"codigo":"8212","nombre":"PERFIL 100 X 50 RODEO BLANCO","precio":2.55,"longitudes":[6000]},{"codigo":"8213","nombre":"PERFIL H 30 METECNO","precio":0.84,"longitudes":[6000]},{"codigo":"8214","nombre":"PERFIL H 40 METECNO","precio":0.88,"longitudes":[6000]},{"codigo":"8217","nombre":"PERFIL CICHORIUM","precio":2.49,"longitudes":[1000]},{"codigo":"8219","nombre":"ZOCALO 130 YUDIGAR GRIS OSCURO","precio":0.95,"longitudes":[1321]},{"codigo":"8219","nombre":"LAMA 140 YUDIGAR FOLIADA","precio":3.78,"longitudes":[3000]},{"codigo":"8219","nombre":"LAMA 140 S/CLIP YUDIGAR SIN FOLIO CYC","precio":0.95,"longitudes":[6000]},{"codigo":"8220","nombre":"TUBO 35 X 35","precio":1.28,"longitudes":[6000]},{"codigo":"8521","nombre":"ACUÑAMIENTO IZCO 14 MM","precio":2.07,"longitudes":[200]},{"codigo":"8221","nombre":"PERFIL TERMINACION SUPERIOR PANEL BLANCO","precio":1.48,"longitudes":[6000]},{"codigo":"8225","nombre":"LAMA 67 CLIP YUDIGAR FOLIADA","precio":2.14,"longitudes":[3000]},{"codigo":"8225","nombre":"LAMA 67 C/CLIP YUDIGAR FOLIADACYC","precio":2.14,"longitudes":[3000]},{"codigo":"8225","nombre":"LAMA 67 C/CLIP SIN FOLIO CYC","precio":0.82,"longitudes":[3000]},{"codigo":"8226","nombre":"L LAMA 65 PS SIN FOLIO CYC","precio":3.29,"longitudes":[2700]},{"codigo":"8226","nombre":"LAMA 65 POLIESTIRENO YUDIGAR FOLIADA","precio":5.27,"longitudes":[3000]},{"codigo":"8229","nombre":"LAMA 67 s/CLIP YUDIGAR FOLIADA","precio":2.2,"longitudes":[3000]},{"codigo":"8229","nombre":"LAMA 67 s/CLIP SIN FOLIO CYC","precio":0.7,"longitudes":[3000]},{"codigo":"8230","nombre":"GUIA GANADERA 7","precio":1.2,"longitudes":[2000]},{"codigo":"8231","nombre":"PERFIL WITTUR","precio":0.65,"longitudes":[1240]},{"codigo":"8232","nombre":"PERFIL TUBO 100 X 100","precio":3.94,"longitudes":[3000]},{"codigo":"8234","nombre":"ANGULO 60 X 60 REFORZADO","precio":1.45,"longitudes":[6000]},{"codigo":"8236","nombre":"PERFIL H 80","precio":1.3,"longitudes":[6000]},{"codigo":"8237","nombre":"PERFIL LAMA CELOSIA SAM KIT BLANCO","precio":2.74,"longitudes":[3000]},{"codigo":"8237","nombre":"PERFIL LAMA CELOSIA SAM KIT TRANSPARENTE","precio":2.74,"longitudes":[1000]},{"codigo":"8238","nombre":"PERFIL 50 X 50 SIN FOLIO CYC","precio":1.37,"longitudes":[6000]},{"codigo":"8238","nombre":"PERFIL 50 X 50 C/FOLIO FOLIO CYC","precio":3.6,"longitudes":[3000]},{"codigo":"8241","nombre":"PERFIL BISAGRA 26 ROTECNA","precio":1.94,"longitudes":[3000]},{"codigo":"8240","nombre":"PERFIL H 26 ROTECNA","precio":1.34,"longitudes":[3000]},{"codigo":"8242","nombre":"H 51 ROTECNA","precio":2.3,"longitudes":[3000]},{"codigo":"8243","nombre":"PERFIL FONDO LAMA P50 GRIS METAL","precio":5.21,"longitudes":[850]},{"codigo":"8244","nombre":"LAMA 54 X 12 SIN FOLIO CYC","precio":1.55,"longitudes":[6000]},{"codigo":"8244","nombre":"LAMA 54 X 12 CON FOLIO CYC (kider)","precio":2.98,"longitudes":[3000]},{"codigo":"8244","nombre":"LAMA 54 FRASSINO","precio":2.98,"longitudes":[5000]},{"codigo":"8246","nombre":"FRENTE CAJON 220 SIN FOLIO CYC","precio":2.08,"longitudes":[3000]},{"codigo":"8246","nombre":"FRENTE CAJON 220 con FOLIO CYC","precio":4.49,"longitudes":[3000]},{"codigo":"8248","nombre":"GUIA GANADERA 13","precio":1.35,"longitudes":[2000]},{"codigo":"8249","nombre":"PERFIL55 X 35 HUECO","precio":1.75,"longitudes":[6000]},{"codigo":"8252","nombre":"PERFIL H PANEL 35 MM","precio":2.48,"longitudes":[6000]},{"codigo":"8253","nombre":"PERFIL ANGULO PANEL 35 MM","precio":2.52,"longitudes":[6000]},{"codigo":"8261","nombre":"LAMA 140 C/CLIP SIN FOLIO","precio":1.09,"longitudes":[3000]},{"codigo":"8261","nombre":"LAMA 140 C/CLIP CON FOLIO","precio":1.95,"longitudes":[3000]},{"codigo":"8263","nombre":"PERFIL DEFELCTOR EXAFAN","precio":1.7,"longitudes":[4000]},{"codigo":"8270","nombre":"POSTE 70 X 70 BLANCO","precio":1.88,"longitudes":[6000]},{"codigo":"8292","nombre":"PANEL 500 X 20 NIDOS","precio":4.43,"longitudes":[6000]},{"codigo":"8293","nombre":"PEFIL BISAGRA NIDOS.","precio":2.51,"longitudes":[6000]},{"codigo":"8294","nombre":"PERFIL FRONTAL NIDOS","precio":2.18,"longitudes":[6000]},{"codigo":"8295","nombre":"U APOYO LATERAL NIDOS.","precio":2.18,"longitudes":[1000]},{"codigo":"8301","nombre":"BATERIAS MARINAS//tubo 8 x 6 plast. Transp.","precio":0.24,"longitudes":[400]},{"codigo":"8323","nombre":"JUNTA PLASTIFICADA EXAFAN","precio":0.58,"longitudes":[6000]},{"codigo":"8369","nombre":"PERFIL L PIKOLIN","precio":0.48,"longitudes":[1100]},{"codigo":"8340","nombre":"CINTA FIG.","precio":0.06,"longitudes":[1000000]},{"codigo":"8406","nombre":"PERFL 35 X 27","precio":1.11,"longitudes":[6000]},{"codigo":"8425","nombre":"PERFIL PANACOR RANURADO","precio":6.26,"longitudes":[2000]},{"codigo":"8425","nombre":"PERFIL PANACOR RANURADO","precio":6.26,"longitudes":[3950]},{"codigo":"8418","nombre":"PERFIL CLARABOYA RECTO","precio":6.31,"longitudes":[3750]},{"codigo":"8425","nombre":"PERFIL PANACOR SIN RANURAR","precio":5.53,"longitudes":[2000]},{"codigo":"8425","nombre":"PERFIL PANACOR SIN RANURAR","precio":5.53,"longitudes":[3950]},{"codigo":"8426","nombre":"PERFIL CUMBRERA PANACOR","precio":5.19,"longitudes":[3950]},{"codigo":"8430","nombre":"PANEL 330 DECO","precio":1.56,"longitudes":[2600]},{"codigo":"8431","nombre":"PANEL 330 GRECADO","precio":2.27,"longitudes":[2600]},{"codigo":"8432","nombre":"PANEL 330 SAN","precio":2.16,"longitudes":[3000]},{"codigo":"8434","nombre":"REMATE DUO","precio":0.95,"longitudes":[3000]},{"codigo":"8435","nombre":"PERFIL H DUO","precio":1.38,"longitudes":[3000]},{"codigo":"8436","nombre":"PEFILSANITARIO 80","precio":1.16,"longitudes":[3000]},{"codigo":"8437","nombre":"BASE ESPANSO","precio":1.3,"longitudes":[3000]},{"codigo":"8438","nombre":"PERFIL CLARABOYA INCLINADO","precio":6.42,"longitudes":[3750]},{"codigo":"8443","nombre":"PERFIL PANACOR 100","precio":4.48,"longitudes":[3950]},{"codigo":"8501","nombre":"PERFIL H 50 EXAFAN","precio":1.53,"longitudes":[6000]},{"codigo":"8505","nombre":"PERFIL FAMESA 29 X 14","precio":0.62,"longitudes":[683]},{"codigo":"8542","nombre":"PERFIL T 40 X 30","precio":0.53,"longitudes":[6000]},{"codigo":"8516","nombre":"PERFIL DOBLE U","precio":2.37,"longitudes":[6000]},{"codigo":"8522","nombre":"ACUÑAMIENTO IZCO 9 MM","precio":2.08,"longitudes":[200]},{"codigo":"8524","nombre":"ANGULO TIFELL","precio":0.93,"longitudes":[6000]},{"codigo":"8565","nombre":"PISADERA MACPUARSA","precio":0.64,"longitudes":[1000]},{"codigo":"8566","nombre":"LAMA VEA BLANCO","precio":4.61,"longitudes":[4200]},{"codigo":"8566","nombre":"LAMA VEA TRANSPARENTE","precio":4.93,"longitudes":[4200]},{"codigo":"8567","nombre":"MARCO VEA","precio":2.76,"longitudes":[4520]},{"codigo":"8577","nombre":"MARCO VEA INFERIOR","precio":3.56,"longitudes":[4520]},{"codigo":"8586","nombre":"ACUÑAMIENTO IZCO 11 MM","precio":2.35,"longitudes":[200]},{"codigo":"8587","nombre":"PERFIL TUBO 80 X 45 PALO PALET","precio":2.13,"longitudes":[4000]},{"codigo":"8589","nombre":"ENSAMBLE 2009","precio":1.32,"longitudes":[6000]},{"codigo":"8592","nombre":"100 X 35 VALLAS","precio":2.15,"longitudes":[3000]},{"codigo":"8597","nombre":"PERFIL CANTO FILTRO","precio":7.38,"longitudes":[6000]},{"codigo":"8737","nombre":"CUBRELUZ IRIZAR","precio":3.42,"longitudes":[1500]},{"codigo":"8807","nombre":"CONECTOR OMEGA","precio":0.61,"longitudes":[100]},{"codigo":"8809","nombre":"TUBO 25 X 2 ABS","precio":0.61,"longitudes":[3000]},{"codigo":"8816","nombre":"PERFIL MOLDURA EXIDE","precio":0.21,"longitudes":[100000]},{"codigo":"8818","nombre":"CINTA RIBAWOOD","precio":0.26,"longitudes":[230000]},{"codigo":"8821","nombre":"BORDURA BARK BORDER","precio":1.39,"longitudes":[10000]},{"codigo":"8826","nombre":"BORDURA WOODTECH BORDER","precio":1.63,"longitudes":[5000]},{"codigo":"8838","nombre":"PERFIL HOLEDECK FLAT 25","precio":9.21,"longitudes":[1195]},{"codigo":"8845","nombre":"PERFIL POSTE FIBRA 80 X 45","precio":10.97,"longitudes":[4000]},{"codigo":"8850","nombre":"PERFIL POSTE FIBRA 100 X 50","precio":10.97,"longitudes":[4000]},{"codigo":"8870","nombre":"PERFIL POSTE FIBRA 70 X 70","precio":5.0,"longitudes":[6000]},{"codigo":"8298","nombre":"PERFIL ROMBO VALLAS","precio":2.31,"longitudes":[6000]},{"codigo":"8010","nombre":"TABIQUE UTRILLA","precio":3.31,"longitudes":[5000,6000]},{"codigo":"8030","nombre":"FLECHA10","precio":1.93,"longitudes":[5000,6000]},{"codigo":"8029","nombre":"FLECHA 20","precio":2.91,"longitudes":[5000,6000]},{"codigo":"8041","nombre":"REFORZADO","precio":4.39,"longitudes":[5000,6000]},{"codigo":"8552","nombre":"PANEL 500 X 50 MH BLANCO","precio":9.96,"longitudes":[5000,6000]},{"codigo":"8552","nombre":"PANEL 500 X 50 MH GRIS","precio":9.39,"longitudes":[5000,6000]},{"codigo":"8553","nombre":"PANEL 500 X 50 LH BLANCO","precio":10.61,"longitudes":[5000,6000]},{"codigo":"8553","nombre":"PANEL 500 X 50 LH GRIS","precio":10.01,"longitudes":[5000,6000]},{"codigo":"8554","nombre":"PANEL 500 X 50 LM BLANCO","precio":10.29,"longitudes":[5000,6000]},{"codigo":"8554","nombre":"PANEL 500 X 50 LM GRIS","precio":9.72,"longitudes":[5000,6000]},{"codigo":"8568","nombre":"200 X 50 MH BLANCO","precio":5.35,"longitudes":[5000,6000]},{"codigo":"8568","nombre":"200 X 50 MH GRIS","precio":5.11,"longitudes":[5000,6000]},{"codigo":"8569","nombre":"200 X 50 LH BLANCO","precio":5.6,"longitudes":[5000,6000]},{"codigo":"8569","nombre":"200 X 50 LH GRIS","precio":5.35,"longitudes":[5000,6000]},{"codigo":"8570","nombre":"100 X 50 LH BLANCO","precio":3.41,"longitudes":[5000,6000]},{"codigo":"8570","nombre":"100 X 50 LH GRIS","precio":3.28,"longitudes":[5000,6000]},{"codigo":"8059","nombre":"PERFIL 55 X 35","precio":1.83,"longitudes":[5000,6000]},{"codigo":"8050","nombre":"SYMPANEL 500 MH","precio":7.34,"longitudes":[5000,6000]},{"codigo":"8093","nombre":"PANEL 500 LL BLANCO","precio":5.12,"longitudes":[5000,6000]},{"codigo":"8093","nombre":"PANEL 500 LL GRIS","precio":5.59,"longitudes":[5000,6000]},{"codigo":"8090","nombre":"EXPANEL 500 X 35 MH BLANCO","precio":6.02,"longitudes":[5000,6000]},{"codigo":"8090","nombre":"EXPANEL 500 X 35 MH GRIS","precio":5.67,"longitudes":[5000,6000]},{"codigo":"8092","nombre":"EXPANEL 500 X 35 ML BLANCO","precio":6.12,"longitudes":[5000,6000]},{"codigo":"8092","nombre":"EXPANEL 500 X 35 ML GRIS","precio":5.76,"longitudes":[5000,6000]},{"codigo":"8091","nombre":"EXPANEL 500 X 35 LH BLANCO","precio":6.01,"longitudes":[5000,6000]},{"codigo":"8091","nombre":"MT.S EXPANEL 500 X 35 LH GRIS","precio":5.66,"longitudes":[5000,6000]},{"codigo":"8094","nombre":"EXPANEL 200 X 35 MH BLANCO","precio":3.36,"longitudes":[5000,6000]},{"codigo":"8094","nombre":"EXPANEL 200 X 35 MH GRIS","precio":3.21,"longitudes":[5000,6000]},{"codigo":"8095","nombre":"EXPANEL 200 X 35 LH BLANCO","precio":3.39,"longitudes":[5000,6000]},{"codigo":"8095","nombre":"EXPANEL 200 X 35 LH GRIS","precio":3.24,"longitudes":[5000,6000]},{"codigo":"8590","nombre":"PANEL SIMETRICO GRIS","precio":7.8,"longitudes":[5000,6000]},{"codigo":"8582","nombre":"PANEL 700 x 35 BLANCO","precio":7.85,"longitudes":[5000,6000]},{"codigo":"8582","nombre":"PANEL 700 x 35 GRIS","precio":7.4,"longitudes":[5000,6000]},{"codigo":"8280","nombre":"PANEL 800 X 35 BLANCO","precio":8.77,"longitudes":[5000,6000]},{"codigo":"8280","nombre":"PANEL 800 X 35 GRIS","precio":8.25,"longitudes":[5000,6000]},{"codigo":"8281","nombre":"PANEL 800 X 50 BLANCO","precio":12.91,"longitudes":[5000,6000]},{"codigo":"8281","nombre":"PANEL 800 X 50 GRIS","precio":12.14,"longitudes":[5000,6000]},{"codigo":"8550","nombre":"PANEL 250 X 35 ROTECNA","precio":4.16,"longitudes":[5000,6000]},{"codigo":"8078","nombre":"250 X 20","precio":2.74,"longitudes":[5000,6000]},{"codigo":"8011","nombre":"PERFIL U 35 BLANCO","precio":1.18,"longitudes":[5000,6000]},{"codigo":"8011","nombre":"PERFIL U 35 GRIS","precio":1.14,"longitudes":[5000,6000]},{"codigo":"8066","nombre":"PERFIL U BISAGRA TRASERA","precio":2.28,"longitudes":[5000,6000]},{"codigo":"8067","nombre":"PERFIL U BISAGRA LATERAL","precio":2.6,"longitudes":[5000,6000]},{"codigo":"8555","nombre":"PERFIL U 50 x 50 BLANCO","precio":1.56,"longitudes":[5000,6000]},{"codigo":"8555","nombre":"U 50 X 50 GRIS","precio":1.51,"longitudes":[5000,6000]},{"codigo":"8540","nombre":"PERFIL U 20","precio":0.96,"longitudes":[5000,6000]},{"codigo":"8592","nombre":"PEFIL 100 X 35 BLANCO","precio":2.02,"longitudes":[5000,6000]},{"codigo":"8592","nombre":"PERFIL 100 X 35 GRIS","precio":1.94,"longitudes":[5000,6000]},{"codigo":"8249","nombre":"PERFIL 35 X 35 BLANCO","precio":1.75,"longitudes":[5000,6000]},{"codigo":"8251","nombre":"PERFIL 100 X 50 LISO - LISO","precio":2.29,"longitudes":[5000,6000]},{"codigo":"8289","nombre":"MT.S PANEL 1000 X 35 BLANCO","precio":14.65,"longitudes":[5000,6000]},{"codigo":"8289","nombre":"MT.S PANEL 1000 X 35 GRIS","precio":13.76,"longitudes":[5000,6000]},{"codigo":"8405","nombre":"MT.S PANEL 1000 X 50 BLANCO","precio":16.78,"longitudes":[5000,6000]},{"codigo":"8405","nombre":"MT.S PANEL 1000 X 50 GRIS","precio":15.73,"longitudes":[5000,6000]},{"codigo":"8121","nombre":"TUBO 21 X 3,2","precio":0.98,"longitudes":[3000,1500]},{"codigo":"8103","nombre":"TUBO 16 MM","precio":0.66,"longitudes":[3000,1500]},{"codigo":"8108","nombre":"TUBO 25 x 1,5 MM","precio":0.71,"longitudes":[3000,1500]},{"codigo":"8111","nombre":"TUBO 25 X 2","precio":0.67,"longitudes":[3000,1500]},{"codigo":"8148","nombre":"TUBO 50 X 1,6","precio":1.16,"longitudes":[3000,1500]},{"codigo":"8155","nombre":"TUBO 55 X 1,8","precio":1.29,"longitudes":[3000,1500]},{"codigo":"8156","nombre":"TUBO 55 X 2,5","precio":1.62,"longitudes":[3000,1500]},{"codigo":"8161","nombre":"TUBO 60 X 3,2","precio":2.35,"longitudes":[3000,1500]},{"codigo":"8164","nombre":"TUBO 63 X 3,2","precio":2.35,"longitudes":[3000,1500]},{"codigo":"8165","nombre":"TUBO 63 X 1,8","precio":1.43,"longitudes":[3000,1500]},{"codigo":"8171","nombre":"TUBO 70 X 1,8","precio":1.59,"longitudes":[3000,1500]},{"codigo":"8170","nombre":"TUBO 75 X 1,6 TRANSP","precio":2.51,"longitudes":[3000,1500]},{"codigo":"8172","nombre":"TUBO 75 X 1,5","precio":1.64,"longitudes":[3000,1500]},{"codigo":"8178","nombre":"TUBO 75 X 3,6 TRANSP.","precio":3.5,"longitudes":[3000,1500]},{"codigo":"8177","nombre":"TUBO 75 X 3,6","precio":2.5,"longitudes":[3000,1500]},{"codigo":"8191","nombre":"TUBO 90 X 4","precio":3.42,"longitudes":[3000,1500]},{"codigo":"8190","nombre":"TUBO 90 X 2","precio":2.07,"longitudes":[3000,1500]},{"codigo":"8124","nombre":"TUBO 125 X 5","precio":6.42,"longitudes":[3000,1500]},{"codigo":"8110","nombre":"TUBO 110 X 2","precio":2.43,"longitudes":[3000,1500]},{"codigo":"8168","nombre":"TUBO 160 X 2 TRANSPA","precio":6.87,"longitudes":[3000,1500]},{"codigo":"8159","nombre":"TUBO 90 X 2 NEGRO ECOCUP","precio":1.53,"longitudes":[3000,1500]},{"codigo":"8956","nombre":"CURVA 55 X 2,5 X 1,5","precio":4.93,"longitudes":[3000,1500]},{"codigo":"8962","nombre":"CURVA 63 X 3,2 X 1,5","precio":4.46,"longitudes":[3000,1500]},{"codigo":"8925","nombre":"CURVA 125 X 5 X 1,5","precio":14.63,"longitudes":[3000,1500]},{"codigo":"8981","nombre":"CURVA 75 X 3,6 X 1,5","precio":7.25,"longitudes":[3000,1500]},{"codigo":"8990","nombre":"CURVA 90 X 4 X 1,5","precio":9.63,"longitudes":[3000,1500]},{"codigo":"8400BAM","nombre":"LAMA CLOVISION 44 BAMBU","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8400BL","nombre":"LAMA CLOVISION 44 BLANCO","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8400N","nombre":"LAMA CLOVISION 44 NOIR","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8400V","nombre":"LAMA CLOVISION 44 VERDE","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8401ANT","nombre":"LAMA CLOVISION 40 ANTRACITA","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8401BAM","nombre":"LAMA CLOVISION 40 BAMBU","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8401BL","nombre":"LAMA CLOVISION 40 BLANCO","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8401N","nombre":"LAMA CLOVISION 40 NOIR","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8401V","nombre":"LAMA CLOVISION 40 VERDE","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8402ANT","nombre":"LAMA CLOVISION 30 ANTRACITA","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8402BAM","nombre":"LAMA CLOVISION 30 BAMBU","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8402BL","nombre":"LAMA CLOVISION 30 BLANCO","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8402N","nombre":"LAMA CLOVISION 30 NOIR","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8402V","nombre":"LAMA CLOVISION 30 VERDE","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"","nombre":"PIED LAME 590 CLOVISION","precio":null,"longitudes":[]},{"codigo":"","nombre":"PIED LAME 640 CLOVISION","precio":null,"longitudes":[]},{"codigo":"","nombre":"CONNECTEUR CLOVISION","precio":null,"longitudes":[]},{"codigo":"8400ANT","nombre":"LAMA CLOVISION 44 ANTRACITA","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8282ANT","nombre":"PERFIL LAME PVC 48 ANTRACITA","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8282BAM","nombre":"PERFIL LAME PVC 48 BAMBU","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8282BL","nombre":"LAME PVC 48 BLANC","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8282NOIR","nombre":"LAME PVC 48mm RAL NOIR","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8282VE","nombre":"PERFIL LAME PVC 48 VERDE","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8283ANT","nombre":"PERFIL LAME PVC 43MM ANTRACITA","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8283BAM","nombre":"PERFIL LAME PVC 43MM BAMBU","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8283BL","nombre":"LAME PVC 43 MM BLANCO","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8283NOIR","nombre":"LAME PVC 43mm NOIR","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8283VE","nombre":"PERFIL LAME PVC 43MM VERDE","precio":null,"longitudes":[1030,1230,1530,1730,1930]},{"codigo":"8285ANT","nombre":"PIED POUR LAME PVC (0,604) ANTRACITA","precio":null,"longitudes":[590,640]},{"codigo":"8285BAM","nombre":"PIED POUR LAME PVC (0,604) BAMBU","precio":null,"longitudes":[590,640]},{"codigo":"8285BL","nombre":"PIED DE LAMES (0,604) BLANC","precio":null,"longitudes":[590,640]},{"codigo":"8285GC","nombre":"PIED POUR LAME PVC (0,604) GRIS CLAIR","precio":null,"longitudes":[590,640]},{"codigo":"8285M","nombre":"PIED POUR LAME PVC (0,604) MARRON","precio":null,"longitudes":[590,640]},{"codigo":"8285NOIR","nombre":"PIED POUR LAME PVC (0,604) NOIR","precio":null,"longitudes":[590,640]},{"codigo":"8285VE","nombre":"PIED POUR LAME PVC (0,604) VERDE","precio":null,"longitudes":[590,640]},{"codigo":"8296ANT","nombre":"FINITION 2020 ANTRACITA (1235)","precio":null,"longitudes":[1235]},{"codigo":"8296BAM","nombre":"FINITION 2020 BAMBU (1235)","precio":null,"longitudes":[1235]},{"codigo":"8296BL","nombre":"FINITION 2020 BLANCO (1235)","precio":null,"longitudes":[1235]},{"codigo":"8296NOIR","nombre":"FINITION 2020 NOIR (1235)","precio":null,"longitudes":[1235]},{"codigo":"8296V","nombre":"FINITION 2020 VERDE (1235)","precio":null,"longitudes":[1235]},{"codigo":"8284ANT","nombre":"PROFIL PLIS (1,24) ANTRACITA","precio":null,"longitudes":[1240]},{"codigo":"8284BAM","nombre":"PROFIL PLIS (1,24) BAMBU","precio":null,"longitudes":[1240]},{"codigo":"8284BL","nombre":"PROFIL PLIS (1,24) PVC BLANC","precio":null,"longitudes":[1240]},{"codigo":"8284GC","nombre":"PROFIL PLIS (1,24) GRIS CLAIR","precio":null,"longitudes":[1240]},{"codigo":"8284M","nombre":"PROFIL PLIS (1,24) MARRON","precio":null,"longitudes":[1240]},{"codigo":"8284NOIR","nombre":"PROFIL PLIS (1,24) NOIR","precio":null,"longitudes":[1240]},{"codigo":"8284VE","nombre":"PROFIL PLIS (1,24) VERDE","precio":null,"longitudes":[1240]},{"codigo":"8421ANT","nombre":"PERFIL PLIS MULTIPOSICION ANTRACITA","precio":null,"longitudes":[]},{"codigo":"8421BAM","nombre":"PERFIL PLIS MULTIPOSICION BAMBOU","precio":null,"longitudes":[]},{"codigo":"8421BL","nombre":"PERFIL PLIS MULTIPOSICION BLANCO","precio":null,"longitudes":[]},{"codigo":"8421NG","nombre":"PERFIL PLIS MULTIPOSICION NEGRO","precio":null,"longitudes":[]},{"codigo":"8421V","nombre":"PERFIL PLIS MULTIPOSICION VERDE","precio":null,"longitudes":[]},{"codigo":"8290ANT","nombre":"PERFIL PLIE 17 MM (1,25) ANTRACITA","precio":null,"longitudes":[1250]},{"codigo":"8290BAM","nombre":"PERFIL PLIE 17 MM (1,25) BAMBU","precio":null,"longitudes":[1250]},{"codigo":"8290BL","nombre":"PERFIL PLIE 17 MM (1,25) BLANCO","precio":null,"longitudes":[1250]},{"codigo":"8290GC","nombre":"PERFIL PLIE 17 MM (1,25) GRIS CLARO COMP","precio":null,"longitudes":[1250]},{"codigo":"8290M","nombre":"PERFIL PLIE 17 MM (1,25) MARRON COMP","precio":null,"longitudes":[1250]},{"codigo":"8290NOIR","nombre":"PERFIL PLIE 17 MM (1,25) NOIR","precio":null,"longitudes":[1250]},{"codigo":"8290V","nombre":"PERFIL PLIE 17 MM (1,25) VERDE","precio":null,"longitudes":[1250]},{"codigo":"8403ANT","nombre":"PERFIL PLIS GAMME 60 ANTRACITA","precio":null,"longitudes":[]},{"codigo":"8403BAM","nombre":"PERFIL PLIS GAMME 60 BAMBU","precio":null,"longitudes":[]},{"codigo":"8403BL","nombre":"PERFIL PLIS GAMME 60 BLANCO","precio":null,"longitudes":[]},{"codigo":"8403N","nombre":"PERFIL PLIS GAMME 60 NOIR","precio":null,"longitudes":[]},{"codigo":"8403V","nombre":"PERFIL PLIS GAMME 60 VERDE","precio":null,"longitudes":[]}];
+const CATALOGO_MATERIAS = [{"codigo":"996800","nombre":"GRANZA VERDE","precio":1.71,"sacaOpciones":[1800,1000]},{"codigo":"","nombre":"GRANZA MARRON ECOCUP","precio":1.71,"sacaOpciones":[1800,1000]},{"codigo":"997810","nombre":"GRANZA CEREZZO","precio":1.71,"sacaOpciones":[1800,1000]},{"codigo":"9106","nombre":"GRANZA GRIS ENROLLABLE","precio":1.59,"sacaOpciones":[1800,1000]},{"codigo":"9305","nombre":"GRANZA TABIQUE REAGENS","precio":1.49,"sacaOpciones":[1800,1000]},{"codigo":"980149","nombre":"GRANZA METALIZADO GRIS","precio":1.71,"sacaOpciones":[1800,1000]},{"codigo":"","nombre":"GRANZA VERDE TABIQUE","precio":1.71,"sacaOpciones":[1800,1000]},{"codigo":"9331","nombre":"GRANZA TUBO BLANCO","precio":1.71,"sacaOpciones":[1800,1000]},{"codigo":"9332","nombre":"GRANZA TUBO NEGRO","precio":1.49,"sacaOpciones":[1800,1000]},{"codigo":"9306","nombre":"GRANZA TUBO INCOLORO","precio":0.99,"sacaOpciones":[1800,1000]},{"codigo":"9311","nombre":"TABIQUE INCOLORO","precio":1.52,"sacaOpciones":[1800,1000]},{"codigo":"9325","nombre":"GRANZA GRIS JUNQUILLO","precio":1.59,"sacaOpciones":[1800,1000]},{"codigo":"9332","nombre":"GRANZA FORMULA 309 PANEL DECORATIVO","precio":1.24,"sacaOpciones":[1800,1000]},{"codigo":"9321","nombre":"GRANZA ESPANSO","precio":0.68,"sacaOpciones":[1800,1000]},{"codigo":"412","nombre":"GRANZA BENVIC EB711GH/8590B","precio":2.19,"sacaOpciones":[1250]},{"codigo":"505","nombre":"GRANZA ERCROS 87280","precio":1.55,"sacaOpciones":[1250]},{"codigo":"432","nombre":"GRANZA SEMI RIGIDO NEGRO PIKOLIN EX46800","precio":1.91,"sacaOpciones":[1250]},{"codigo":"424","nombre":"GRANZA BENVIC EB711GH/55868 MARRON","precio":1.98,"sacaOpciones":[1250]},{"codigo":"500","nombre":"GRANZA TRANSP. PLASTIFICADO 8500","precio":2.2,"sacaOpciones":[1250]},{"codigo":"507","nombre":"GRANZA PVC PLAST. NATURAL ERCROS ER74270","precio":1.57,"sacaOpciones":[1250]},{"codigo":"503","nombre":"GRANZA BLANCO SCHAKO ERB3230 910","precio":1.5,"sacaOpciones":[1250]},{"codigo":"404","nombre":"GRANZA NEGRO CYGSA ER-28455/3 sp/r","precio":2.18,"sacaOpciones":[1250]},{"codigo":"416","nombre":"GRANZA BAMBOU PLA CYGSA ER18344/M961/4-ESP","precio":2.07,"sacaOpciones":[1250]},{"codigo":"417","nombre":"GRANZA VERDE PLA CYGSA ER18344/M9-61/4E SP/6005","precio":2.13,"sacaOpciones":[1250]},{"codigo":"418","nombre":"GRANZA ANTRACITA PLA CYGSA","precio":2.06,"sacaOpciones":[1250]},{"codigo":"418","nombre":"GRANZA BLANCO PLA CYGSA","precio":2.09,"sacaOpciones":[1250]},{"codigo":"418","nombre":"GRANZA NEGRO PLA CYGSA","precio":1.81,"sacaOpciones":[1250]},{"codigo":"","nombre":"GRANZA COLORES COMPOSITE CLOVISION","precio":2.25,"sacaOpciones":[1250]},{"codigo":"405","nombre":"GOMA CYGSA TRASLUCIDO EP07219","precio":3.1,"sacaOpciones":[1250]},{"codigo":"405","nombre":"GRANZA CYGSA ER-28251 EXT BARINSA","precio":1.54,"sacaOpciones":[1250]},{"codigo":"451","nombre":"GRANZA CYGSA M1 ER-38460","precio":1.84,"sacaOpciones":[1250]},{"codigo":"452","nombre":"GRANZA CYGSA ER28251 SANITARIO","precio":1.79,"sacaOpciones":[1250]},{"codigo":"595","nombre":"GRANZA TABIQUE INCOLORO ERCROS ERB3222000","precio":1.4,"sacaOpciones":[1250]},{"codigo":"411","nombre":"BENVIC PISCINAER 180/C071AA ARENA","precio":1.73,"sacaOpciones":[1250]},{"codigo":"409","nombre":"BENVIC PISCINAER 161B024AC AZUL","precio":1.71,"sacaOpciones":[1250]},{"codigo":"408","nombre":"BENVIC PISCINAER 161W012AG BLANCO","precio":1.76,"sacaOpciones":[1250]},{"codigo":"410","nombre":"BENVIC PISCINAER 180/G252 GRIS","precio":1.78,"sacaOpciones":[1250]},{"codigo":"410","nombre":"ERCROS ER-B3222 0903 CLARAB","precio":1.9,"sacaOpciones":[1250]},{"codigo":"410","nombre":"COLORE COEX PANACOR","precio":2.58,"sacaOpciones":[1250]},{"codigo":"587","nombre":"GRANZA TUBO ERCROS ERB3220-940","precio":1.49,"sacaOpciones":[1250]},{"codigo":"556","nombre":"GRANZA GRIS SITA 221 (NUESTRO)","precio":0.9,"sacaOpciones":[1250]},{"codigo":"807-808-809","nombre":"GRANZA BEOLOGIC","precio":2.89,"sacaOpciones":[1250]},{"codigo":"544","nombre":"GRANZA B111 CITE PLAST","precio":1.32,"sacaOpciones":[1250]},{"codigo":"583","nombre":"GRANZA GRIS 216 CITE PLAST","precio":1.21,"sacaOpciones":[1250]},{"codigo":"583","nombre":"GRANZA GRIS VEKA","precio":1.07,"sacaOpciones":[1250]},{"codigo":"426","nombre":"GRANZA7035 veka","precio":1.35,"sacaOpciones":[1250]},{"codigo":"555","nombre":"GRANZA PWR","precio":1.3,"sacaOpciones":[1250]},{"codigo":"555","nombre":"GRANZA VEKA 9002","precio":1.42,"sacaOpciones":[1250]},{"codigo":"555","nombre":"GRANZA METAL PLAST BLANCO","precio":1.16,"sacaOpciones":[1250]},{"codigo":"576","nombre":"ARRANZ COLORES MOLIDO","precio":0.8,"sacaOpciones":[1250]},{"codigo":"575","nombre":"ARRANZ COLORES GRANZA","precio":0.92,"sacaOpciones":[1250]},{"codigo":"575","nombre":"GRANZA ARRANZ BLANCO","precio":1.06,"sacaOpciones":[1250]},{"codigo":"549","nombre":"ARRANZ BLANCO MOLIDO","precio":0.9,"sacaOpciones":[1250]},{"codigo":"","nombre":"MICRONIZADO TECNOPOL","precio":1.0,"sacaOpciones":[1250]},{"codigo":"","nombre":"GRANZA PRUEBA RECICLADO ERCROS","precio":1.2,"sacaOpciones":[1250]},{"codigo":"","nombre":"ESPUMADO BENVIC","precio":1.82,"sacaOpciones":[1250]},{"codigo":"","nombre":"GRANZA PANAMA","precio":1.2,"sacaOpciones":[1250]},{"codigo":"201","nombre":"0015 KGRS. CROMOFIX BLANCO 0015","precio":1.8,"sacaOpciones":[]},{"codigo":"258","nombre":"01B247 HAYA VAPORIZADA","precio":8.58,"sacaOpciones":[]},{"codigo":"216","nombre":"06B209 KGRS. VERDE 06B209","precio":13.54,"sacaOpciones":[]},{"codigo":"222","nombre":"07b169 SAPELLY","precio":8.94,"sacaOpciones":[]},{"codigo":"223","nombre":"07B235 KGRS. BEIGE PINO 7047","precio":8.33,"sacaOpciones":[]},{"codigo":"296","nombre":"08B231 GRIS 7016","precio":5.11,"sacaOpciones":[]},{"codigo":"296","nombre":"08N006 GRIS CLARO PARA 235//HMBPLAS PV-70542","precio":6.6,"sacaOpciones":[]},{"codigo":"","nombre":"08N012","precio":6.92,"sacaOpciones":[]},{"codigo":"203","nombre":"08B349 GRIS ANTRACITA CENTROFLOR","precio":5.85,"sacaOpciones":[]},{"codigo":"203","nombre":"1001 KGRS. CROMOFIX AMARILLO 1001","precio":5.85,"sacaOpciones":[]},{"codigo":"203","nombre":"MB 22216 YELLOW","precio":6.85,"sacaOpciones":[]},{"codigo":"234","nombre":"1093 KGRS. MARFIL OSYMA 11B188","precio":6.95,"sacaOpciones":[]},{"codigo":"236","nombre":"1206 KGRS. AZUL BLANCO CAFF 1206/HADES PV90200","precio":7.1,"sacaOpciones":[]},{"codigo":"292","nombre":"11081 MB+ BLANCO ABS","precio":5.15,"sacaOpciones":[]},{"codigo":"248","nombre":"21498 KGRS GRIS EXAFAN","precio":11.87,"sacaOpciones":[]},{"codigo":"248","nombre":"26402 VERDE CENTROFLOR","precio":8.53,"sacaOpciones":[]},{"codigo":"204","nombre":"30127 HADES ROJO","precio":9.99,"sacaOpciones":[]},{"codigo":"2196","nombre":"03B167 KGRS. ROJO RIGIDO","precio":5.07,"sacaOpciones":[]},{"codigo":"238","nombre":"32716 KGRS. NARANJA 32716","precio":7.31,"sacaOpciones":[]},{"codigo":"226","nombre":"3510 KGRS. ROJO FOSFORESCENTE 3510","precio":10.59,"sacaOpciones":[]},{"codigo":"270","nombre":"35236 KGRS. AZUL 35236","precio":6.81,"sacaOpciones":[]},{"codigo":"309","nombre":"36038 CROMOFIX VERDE PE","precio":9.55,"sacaOpciones":[]},{"codigo":"274","nombre":"81325 MBBLACK NEGRO PE","precio":2.1,"sacaOpciones":[]},{"codigo":"254","nombre":"40013 CROMOFIX BLANCO 9010 CAFF","precio":8.51,"sacaOpciones":[]},{"codigo":"254","nombre":"41B308 ROBLE CERESA","precio":9.79,"sacaOpciones":[]},{"codigo":"271","nombre":"MB4224 RED ROJO ABS","precio":5.5,"sacaOpciones":[]},{"codigo":"262","nombre":"47781 KGRS. CEREZO 47781","precio":12.92,"sacaOpciones":[]},{"codigo":"221","nombre":"5101 KGRS. AZUL 5101","precio":3.67,"sacaOpciones":[]},{"codigo":"255","nombre":"6132 KGRS. VERDE 6132","precio":5.79,"sacaOpciones":[]},{"codigo":"278","nombre":"63B770 ROJO EVA","precio":10.48,"sacaOpciones":[]},{"codigo":"200","nombre":"6725 KGRS. CROMOFIX VERDE","precio":3.81,"sacaOpciones":[]},{"codigo":"259","nombre":"68B746 GRIS","precio":8.15,"sacaOpciones":[]},{"codigo":"295","nombre":"68N034 GRIS EXIDE","precio":6.47,"sacaOpciones":[]},{"codigo":"288","nombre":"7-65J-244 AZUL PE","precio":10.85,"sacaOpciones":[]},{"codigo":"257","nombre":"767C224 MARRON CENTROFLOR PE","precio":7.46,"sacaOpciones":[]},{"codigo":"244","nombre":"7810 KGRS. CEREZO 7810","precio":7.1,"sacaOpciones":[]},{"codigo":"294","nombre":"7-99C213 NEGRO","precio":7.4,"sacaOpciones":[]},{"codigo":"207","nombre":"8151 KGRS. CROMOFIX MET. GRIS","precio":5.65,"sacaOpciones":[]},{"codigo":"","nombre":"97B206 NEGRO STREAKER","precio":null,"sacaOpciones":[]},{"codigo":"","nombre":"KA7B130 CHOCOLATE","precio":8.33,"sacaOpciones":[]},{"codigo":"273","nombre":"KA8B349 GREY","precio":8.14,"sacaOpciones":[]},{"codigo":"291","nombre":"KA8N004","precio":9.86,"sacaOpciones":[]},{"codigo":"321","nombre":"60351 VERDE HADES ZUCAMI","precio":8.4,"sacaOpciones":[]},{"codigo":"","nombre":"MB AZUL 8025 PVC R5021 EUROMASTER-FLUYTEC","precio":7.84,"sacaOpciones":[]},{"codigo":"307","nombre":"NEGRO HMBPLAST PV-85102","precio":2.46,"sacaOpciones":[]},{"codigo":"","nombre":"OOB005","precio":14.11,"sacaOpciones":[]},{"codigo":"810","nombre":"STREAKER BLACK 937","precio":32.9,"sacaOpciones":[]},{"codigo":"293","nombre":"STREAKER MARRON IQAP 97B206","precio":42.06,"sacaOpciones":[]},{"codigo":"286","nombre":"87309 WPC MARRON PE","precio":5.6,"sacaOpciones":[]},{"codigo":"287","nombre":"3959 WPC PROTECTOR UV","precio":15.9,"sacaOpciones":[]},{"codigo":"11","nombre":"RESINA ETINOX 631 F/N","precio":1.4,"sacaOpciones":[]},{"codigo":"7","nombre":"RESINA MEXICHEM","precio":1.6,"sacaOpciones":[]},{"codigo":"16","nombre":"RESINA EGIPCIA","precio":1.16,"sacaOpciones":[]},{"codigo":"20","nombre":"CARGA BSH","precio":0.15,"sacaOpciones":[]},{"codigo":"24","nombre":"CARGA 90T","precio":0.23,"sacaOpciones":[]},{"codigo":"35","nombre":"CORES PARADA","precio":4.5,"sacaOpciones":[]},{"codigo":"41","nombre":"LUBRICANTE PF","precio":3.25,"sacaOpciones":[]},{"codigo":"40","nombre":"LUBRICANTE H","precio":2.8,"sacaOpciones":[]},{"codigo":"42","nombre":"LUBRICANTE E","precio":3.56,"sacaOpciones":[]},{"codigo":"53","nombre":"KANE ACE PA 20","precio":3.6,"sacaOpciones":[]},{"codigo":"69","nombre":"AYUDA DE PROCESO TP120 QUIMIALMEL","precio":2.9,"sacaOpciones":[]},{"codigo":"56","nombre":"CPE K 6000","precio":2.4,"sacaOpciones":[]},{"codigo":"67","nombre":"CPE QUIMIALMEL","precio":1.4,"sacaOpciones":[]},{"codigo":"66","nombre":"BIOXIDO DE TITANIO RGX10","precio":3.1,"sacaOpciones":[]},{"codigo":"68","nombre":"BIOXIDO DE TITANIO INEOS","precio":3.4,"sacaOpciones":[]},{"codigo":"70","nombre":"ESTEARATO DE CALCIO","precio":1.72,"sacaOpciones":[]},{"codigo":"29","nombre":"REAPACK G TU/1130","precio":3.37,"sacaOpciones":[]},{"codigo":"50","nombre":"REAPACK G-AV/2566/2","precio":3.26,"sacaOpciones":[]},{"codigo":"39","nombre":"REAPACK G-AV-2672","precio":3.38,"sacaOpciones":[]},{"codigo":"57","nombre":"REALUBE 12","precio":3.62,"sacaOpciones":[]},{"codigo":"","nombre":"COLORANTE APROX.","precio":null,"sacaOpciones":[]},{"codigo":"724","nombre":"PC DINAXAN BLANCO PC1S05UV","precio":4.1,"sacaOpciones":[]},{"codigo":"514","nombre":"PC SABIC LEXAN 1332T NA9E 136T NAT","precio":2.4,"sacaOpciones":[]},{"codigo":"512","nombre":"PC DINAXAN BLANCO PC1S05UV-9318 OPAL AZ.","precio":4.48,"sacaOpciones":[]},{"codigo":"518","nombre":"POLIPROPILENO ISPLEN 230 RANDOM","precio":1.42,"sacaOpciones":[]},{"codigo":"537","nombre":"POLIPROPILENO HOMO ISPLEN 130","precio":1.77,"sacaOpciones":[]},{"codigo":"515","nombre":"POLICARBONATO ARNATE A1033B","precio":2.63,"sacaOpciones":[]},{"codigo":"705","nombre":"PC/ABS LIBRE HALOGENOS. REPOL","precio":3.62,"sacaOpciones":[]},{"codigo":"903","nombre":"ABS V0 VH-800","precio":4.4,"sacaOpciones":[]},{"codigo":"903","nombre":"polylac 747NC ABS NORMAL","precio":3.15,"sacaOpciones":[]},{"codigo":"903","nombre":"POLYLAR 765A ABS V0","precio":4.2,"sacaOpciones":[]},{"codigo":"512","nombre":"POLICARBONATO DINAXAN UV9250","precio":4.1,"sacaOpciones":[]},{"codigo":"902","nombre":"ABS TERLURAN","precio":2.78,"sacaOpciones":[]},{"codigo":"614","nombre":"POLIETILENO DOW 310 E","precio":2.07,"sacaOpciones":[]},{"codigo":"619","nombre":"PEHD MARLEX","precio":1.98,"sacaOpciones":[]},{"codigo":"709","nombre":"ASA LG 913","precio":3.03,"sacaOpciones":[]},{"codigo":"812","nombre":"BEOLOGIC 50 % PP 50 % MADERA","precio":3.02,"sacaOpciones":[]},{"codigo":"805","nombre":"EVA ALCUDIA","precio":1.88,"sacaOpciones":[]},{"codigo":"","nombre":"PS RECICLADO BORDURA QUIMIDROGA","precio":1.23,"sacaOpciones":[]},{"codigo":"","nombre":"PE 100 ELTEX TUBO 120 NRG","precio":1.98,"sacaOpciones":[]},{"codigo":"","nombre":"PS RECICLADO REALPLAST MIX COLOR","precio":2.47,"sacaOpciones":[]},{"codigo":"","nombre":"PE RESISTEX 18/10FG","precio":1.32,"sacaOpciones":[]},{"codigo":"","nombre":"HPDE TR135","precio":1.32,"sacaOpciones":[]},{"codigo":"29000","nombre":"MOLIDO MEZCLA BERENJENO","precio":0.75,"sacaOpciones":[1250,1800,1000]},{"codigo":"53000","nombre":"REGRANCEADO VARIOS","precio":1.0,"sacaOpciones":[1250,1800,1000]},{"codigo":"","nombre":"MOLIDO TABIQUE BLANCO","precio":0.85,"sacaOpciones":[1250,1800,1000]},{"codigo":"","nombre":"REGRANCEADO BLANCO","precio":1.1,"sacaOpciones":[1250,1800,1000]},{"codigo":"15000","nombre":"MOLIDO GRANZA DECORATIVA","precio":null,"sacaOpciones":[1250,1800,1000]},{"codigo":"10000","nombre":"PARA MOLER VARIOS","precio":null,"sacaOpciones":[1250,1800,1000]}];
+
+/* Catálogo real de Extruplesa (30/06/2026). Se carga automáticamente si el móvil todavía
+   tiene los ejemplos de prueba (o ninguna lista) — así no hace falta reinstalar nada.
+   Si ya tenéis una lista propia con más de 10 artículos importada a mano, no se toca. */
+if(loadMaster('productos').length < 10){
+  saveMaster('productos', CATALOGO_PRODUCTOS);
+}
+if(loadMaster('mp').length < 10){
+  saveMaster('mp', CATALOGO_MATERIAS);
+}
+/* Actualización puntual: la lista de materias primas pasó de 84 a 156 artículos
+   (se habían quedado fuera colorantes, pigmentos y granzas de las filas 41-122
+   del Excel). Esto sustituye la lista una única vez aunque ya tuvierais más de 10. */
+if(localStorage.getItem('inv_mp_catalog_v2') !== 'done'){
+  saveMaster('mp', CATALOGO_MATERIAS);
+  try{ localStorage.setItem('inv_mp_catalog_v2', 'done'); }catch(e){}
+}
+
+const savedQ = localStorage.getItem(LS.quarter);
+if(savedQ) state.quarter = savedQ;
+
+/* ============ DOM refs ============ */
+const quarterInput = document.getElementById('quarterInput');
+const tabs = document.querySelectorAll('.tab');
+const searchInput = document.getElementById('searchInput');
+const itemList = document.getElementById('itemList');
+const searchLabel = document.getElementById('searchLabel');
+const entriesLabel = document.getElementById('entriesLabel');
+const totalsLabel = document.getElementById('totalsLabel');
+const entriesTable = document.getElementById('entriesTable');
+const entriesEmpty = document.getElementById('entriesEmpty');
+const totalsTable = document.getElementById('totalsTable');
+const toast = document.getElementById('toast');
+
+quarterInput.value = state.quarter;
+const operarioInput = document.getElementById('operarioInput');
+operarioInput.value = state.operario;
+operarioInput.addEventListener('change', ()=>{
+  state.operario = operarioInput.value.trim();
+  try{ localStorage.setItem('inv_operario', state.operario); }catch(e){}
+});
+
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 1400);
+}
+
+/* ============ Render: lista de items ============ */
+function renderItemList(){
+  const mod = state.activeModule;
+  const master = loadMaster(mod);
+  const q = searchInput.value.trim().toLowerCase();
+  const filtered = master.filter(it =>
+    it.nombre.toLowerCase().includes(q) || it.codigo.toLowerCase().includes(q)
+  );
+  itemList.innerHTML = '';
+  if(filtered.length===0){
+    itemList.innerHTML = '<div class="empty-hint">Sin resultados. Usa "Importar lista" para cargar '+
+      (mod==='productos'?'productos':'materias primas')+'.</div>';
+    return;
+  }
+  filtered.forEach(it=>{
+    const row = document.createElement('div');
+    row.className='item-row';
+    let sub = it.codigo ? escapeHtml(it.codigo) : '<span class="muted">sin código</span>';
+    if(it.precio!=null && it.precio!==''){
+      sub += ' · '+Number(it.precio).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €/'+(mod==='productos'?'mL':'kg');
+    }
+    if(mod==='productos' && it.longitudes && it.longitudes.length){
+      sub += ' · '+it.longitudes.map(l=>(l/1000).toLocaleString('es-ES')+'m').join('/');
+    }
+    if(mod==='mp' && it.sacaOpciones && it.sacaOpciones.length){
+      sub += ' · saca '+it.sacaOpciones.join('/')+'kg';
+    }
+    const hasPhoto = mod==='productos' && it.perfil;
+    const photoBtnHtml = mod==='productos'
+      ? `<button class="item-photo-btn${hasPhoto?' has-photo':''}" data-id="${it._id}" title="${hasPhoto?'Cambiar':'Añadir'} foto de perfil">${hasPhoto?`<img src="${it.perfil}">`:'📷'}</button>`
+      : '';
+    row.innerHTML = `<div><div class="item-name">${escapeHtml(it.nombre)}</div><div class="item-code">${sub}</div></div>
+      <div class="item-right">${photoBtnHtml}<div class="item-add">+</div></div>`;
+    row.addEventListener('click', ()=> openQuickAdd(it));
+    const photoBtn = row.querySelector('.item-photo-btn');
+    if(photoBtn){
+      photoBtn.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        pendingPerfilId = it._id;
+        document.getElementById('perfilFileInput').click();
+      });
+    }
+    itemList.appendChild(row);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============ Fotos de perfil y reconocimiento (offline, en el propio móvil) ============ */
+let pendingPerfilId = null;
+
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = ()=>{ img.src = reader.result; };
+    reader.onerror = reject;
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if(w>h && w>maxDim){ h = Math.round(h*maxDim/w); w = maxDim; }
+      else if(h>=w && h>maxDim){ w = Math.round(w*maxDim/h); h = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// "Huella visual" (dHash de 64 bits) — se calcula 100% en el móvil, sin conexión.
+// Compara la forma/silueta del perfil: funciona mejor si la foto de consulta se
+// encuadra parecido a las fotos de referencia (perfil recto, de frente).
+function computeDHash(dataUrl){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const w=9, h=8;
+      const canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      const data = ctx.getImageData(0,0,w,h).data;
+      const gray = [];
+      for(let i=0;i<w*h;i++){
+        gray.push(0.299*data[i*4]+0.587*data[i*4+1]+0.114*data[i*4+2]);
+      }
+      let hash='';
+      for(let row=0; row<h; row++){
+        for(let col=0; col<w-1; col++){
+          hash += (gray[row*w+col] > gray[row*w+col+1]) ? '1' : '0';
+        }
+      }
+      resolve(hash);
+    };
+    img.src = dataUrl;
+  });
+}
+function hammingSimilarity(a,b){
+  let d=0;
+  for(let i=0;i<a.length;i++) if(a[i]!==b[i]) d++;
+  return Math.round((1 - d/a.length)*100);
+}
+
+document.getElementById('perfilFileInput').addEventListener('change', async (ev)=>{
+  const file = ev.target.files[0];
+  ev.target.value = '';
+  if(!file || !pendingPerfilId) return;
+  showToast('Guardando foto...');
+  const dataUrl = await compressImage(file, 400, 0.75);
+  const hash = await computeDHash(dataUrl);
+  const master = loadMaster('productos');
+  const idx = master.findIndex(it=>it._id===pendingPerfilId);
+  if(idx>-1){
+    master[idx].perfil = dataUrl;
+    master[idx].perfilHash = hash;
+    saveMaster('productos', master);
+    renderItemList();
+    showToast('Foto de perfil guardada');
+  }
+  pendingPerfilId = null;
+});
+
+document.getElementById('btnRecognize').addEventListener('click', ()=>{
+  if(state.activeModule!=='productos'){ showToast('El reconocimiento solo aplica a productos'); return; }
+  document.getElementById('recognizeFileInput').click();
+});
+
+document.getElementById('recognizeFileInput').addEventListener('change', async (ev)=>{
+  const file = ev.target.files[0];
+  ev.target.value = '';
+  if(!file) return;
+  await reconocerPerfilOffline(file);
+});
+
+async function reconocerPerfilOffline(file){
+  const master = loadMaster('productos').filter(it=>it.perfil && it.perfilHash);
+  if(master.length===0){
+    showToast('Todavía no hay fotos de perfil guardadas. Añade alguna con el icono 📷 de cada producto.');
+    return;
+  }
+  showToast('Comparando en el móvil...');
+  const queryDataUrl = await compressImage(file, 400, 0.75);
+  const queryHash = await computeDHash(queryDataUrl);
+
+  const ranked = master
+    .map(it=>({...it, similitud: hammingSimilarity(queryHash, it.perfilHash)}))
+    .sort((a,b)=>b.similitud-a.similitud)
+    .slice(0,3);
+
+  showRecognitionResult(ranked, queryDataUrl, file);
+}
+
+function showRecognitionResult(candidatos, queryDataUrl, originalFile){
+  const overlay = document.createElement('div');
+  overlay.className='sheet-overlay';
+  const rowsHtml = candidatos.map((c,i)=>`
+    <div class="cand-row" data-codigo="${escapeHtml(c.codigo)}">
+      <img src="${c.perfil}">
+      <div class="cand-info">
+        <div class="cand-name">${escapeHtml(c.nombre)}</div>
+        <div class="muted">${escapeHtml(c.codigo)} · ${c.similitud}% parecido</div>
+      </div>
+      <button class="btn-mini-confirm" data-codigo="${escapeHtml(c.codigo)}">Es este</button>
+    </div>`).join('');
+
+  overlay.innerHTML = `
+    <div class="sheet">
+      <div class="sheet-title">Comparación en el móvil (sin conexión)</div>
+      <div class="sheet-sub">Elige cuál coincide con tu foto — ordenados de más a menos parecido</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
+        <img src="${queryDataUrl}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:1.5px solid var(--line);">
+        <div class="muted" style="font-size:12px;">Foto que has hecho</div>
+      </div>
+      <div id="candList">${rowsHtml}</div>
+      <div class="sheet-actions" style="margin-top:14px;">
+        <button class="btn btn-cancel" id="recNone">Ninguno coincide</button>
+      </div>
+      <div id="aiVerifyRow" style="text-align:center;margin-top:12px;">
+        <span class="manual-toggle" id="aiVerifyBtn">¿Con dudas? Verificar con IA (necesita conexión)</span>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelectorAll('.btn-mini-confirm').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const codigo = btn.dataset.codigo;
+      overlay.remove();
+      tabs.forEach(t=>t.classList.remove('active'));
+      document.querySelector('.tab[data-mod="productos"]').classList.add('active');
+      state.activeModule = 'productos';
+      searchInput.value = codigo;
+      renderAll();
+    });
+  });
+  overlay.querySelector('#recNone').addEventListener('click', ()=>overlay.remove());
+  overlay.querySelector('#aiVerifyBtn').addEventListener('click', async ()=>{
+    overlay.remove();
+    await reconocerPerfilOnlineIA(originalFile);
+  });
+}
+
+// Verificación opcional con la visión de Claude — solo se usa si el usuario la pide
+// expresamente y hay conexión disponible (por ejemplo, cerca de la oficina/wifi).
+async function reconocerPerfilOnlineIA(file){
+  const master = loadMaster('productos').filter(it=>it.perfil);
+  showToast('Consultando IA (necesita conexión)...');
+  let queryDataUrl;
+  try{
+    queryDataUrl = await compressImage(file, 500, 0.75);
+  }catch(e){ showToast('No se pudo leer la foto'); return; }
+  const queryB64 = queryDataUrl.split(',')[1];
+
+  const content = [
+    {type:'text', text:'Eres un asistente que identifica perfiles de paneles de plástico extruido comparando su sección transversal (el corte visto de frente, con sus ranuras/machihembrado). Te doy varias imágenes de referencia, cada una precedida por su código y nombre de producto, y al final una foto de consulta de un perfil sin etiquetar. Compara la FORMA del perfil, no el color, la iluminación ni el fondo. Responde ÚNICAMENTE con JSON válido, sin texto adicional ni backticks, con este formato exacto: {"codigo":"...","nombre":"...","confianza":"alta"} — usa "media" o "baja" si no estás muy seguro, y si ninguna referencia se parece razonablemente responde exactamente {"codigo":null}.'}
+  ];
+  master.forEach(it=>{
+    content.push({type:'text', text:'Referencia — código: '+it.codigo+', nombre: '+it.nombre});
+    content.push({type:'image', source:{type:'base64', media_type:'image/jpeg', data: it.perfil.split(',')[1]}});
+  });
+  content.push({type:'text', text:'Foto de consulta a identificar:'});
+  content.push({type:'image', source:{type:'base64', media_type:'image/jpeg', data: queryB64}});
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'claude-sonnet-4-6', max_tokens:300, messages:[{role:'user', content}]})
+    });
+    const data = await resp.json();
+    const textOut = (data.content||[]).map(b=>b.text||'').join('');
+    const clean = textOut.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(clean);
+    if(result && result.codigo){
+      tabs.forEach(t=>t.classList.remove('active'));
+      document.querySelector('.tab[data-mod="productos"]').classList.add('active');
+      state.activeModule = 'productos';
+      searchInput.value = result.codigo;
+      renderAll();
+      showToast('IA sugiere: '+result.nombre);
+    } else {
+      showToast('La IA tampoco ha encontrado una coincidencia clara');
+    }
+  }catch(err){
+    showToast('Sin conexión — no se pudo consultar la IA');
+  }
+}
+
+/* ============ Sheet de alta rápida ============ */
+function openQuickAdd(item){
+  const mod = state.activeModule;
+  const overlay = document.createElement('div');
+  overlay.className='sheet-overlay';
+  const precio = (item.precio!=null && item.precio!=='') ? parseFloat(item.precio) : null;
+
+  if(mod==='productos'){
+    overlay.innerHTML = `
+      <div class="sheet">
+        <div class="sheet-title">${escapeHtml(item.nombre)}</div>
+        <div class="sheet-sub">${item.codigo?escapeHtml(item.codigo):'sin código'}${precio!=null?' · '+precio.toLocaleString('es-ES',{minimumFractionDigits:2})+' €/mL':''}</div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="pallet">Pallet completo</button>
+          <button class="mode-btn" data-mode="suelto">Cantidad suelta</button>
+        </div>
+        <div id="modePallet">
+          <div class="field-row">
+            <div class="field">
+              <label>Nº pallets</label>
+              <div class="stepper">
+                <button data-step="-1">–</button>
+                <input id="qPallets" type="number" value="1" min="1">
+                <button data-step="1">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Cantidad (uds)</label><input id="qCantidad" type="number" inputmode="decimal" placeholder="ej. 198"></div>
+            <div class="field">
+              <label>Longitud (mm)</label>
+              <div class="chip-row" id="chipsPallet"></div>
+              <input id="qLongitud" type="number" inputmode="decimal" placeholder="ej. 3000">
+            </div>
+          </div>
+        </div>
+        <div id="modeSuelto" style="display:none;">
+          <div class="field-row">
+            <div class="field"><label>Unidades sueltas</label><input id="qUdsSueltas" type="number" inputmode="decimal" placeholder="ej. 12"></div>
+            <div class="field">
+              <label>Longitud (mm)</label>
+              <div class="chip-row" id="chipsSuelto"></div>
+              <input id="qLongitudSuelta" type="number" inputmode="decimal" placeholder="ej. 3000">
+            </div>
+          </div>
+        </div>
+        <div class="calc-preview" id="calcPreview">0,00 mL</div>
+        <div class="sheet-actions">
+          <button class="btn btn-cancel" id="sheetCancel">Cancelar</button>
+          <button class="btn btn-confirm" id="sheetConfirm">Añadir</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const pallets = overlay.querySelector('#qPallets');
+    const cantidad = overlay.querySelector('#qCantidad');
+    const longitud = overlay.querySelector('#qLongitud');
+    const udsSueltas = overlay.querySelector('#qUdsSueltas');
+    const longitudSuelta = overlay.querySelector('#qLongitudSuelta');
+    const modePallet = overlay.querySelector('#modePallet');
+    const modeSuelto = overlay.querySelector('#modeSuelto');
+    const preview = overlay.querySelector('#calcPreview');
+    let modo = 'pallet';
+
+    function buildChips(container, input){
+      if(!item.longitudes || item.longitudes.length===0) return;
+      item.longitudes.forEach((l,i)=>{
+        const chip = document.createElement('button');
+        chip.type='button'; chip.className='chip'+(i===0?' active':'');
+        chip.textContent = (l/1000).toLocaleString('es-ES')+' m';
+        chip.addEventListener('click', ()=>{
+          container.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+          chip.classList.add('active');
+          input.value = l;
+          recalc();
+        });
+        container.appendChild(chip);
+      });
+      input.value = item.longitudes[0];
+    }
+    buildChips(overlay.querySelector('#chipsPallet'), longitud);
+    buildChips(overlay.querySelector('#chipsSuelto'), longitudSuelta);
+
+    overlay.querySelectorAll('.mode-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        overlay.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        modo = btn.dataset.mode;
+        modePallet.style.display = modo==='pallet' ? 'block' : 'none';
+        modeSuelto.style.display = modo==='suelto' ? 'block' : 'none';
+        recalc();
+      });
+    });
+
+    function recalc(){
+      let metros;
+      if(modo==='pallet'){
+        const p = parseFloat(pallets.value)||0;
+        const c = parseFloat(cantidad.value)||0;
+        const l = parseFloat(longitud.value)||0;
+        metros = p*c*(l/1000);
+      } else {
+        const u = parseFloat(udsSueltas.value)||0;
+        const l = parseFloat(longitudSuelta.value)||0;
+        metros = u*(l/1000);
+      }
+      let txt = metros.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' mL';
+      if(precio!=null){
+        const valor = metros*precio;
+        txt += '   ·   '+valor.toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+      } else {
+        txt += '   ·   sin precio definido';
+      }
+      preview.textContent = txt;
+      return metros;
+    }
+    [pallets,cantidad,longitud,udsSueltas,longitudSuelta].forEach(el=>el.addEventListener('input', recalc));
+    overlay.querySelectorAll('[data-step]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const d = parseInt(btn.dataset.step);
+        pallets.value = Math.max(1, (parseInt(pallets.value)||1)+d);
+        recalc();
+      });
+    });
+    recalc();
+
+    overlay.querySelector('#sheetCancel').addEventListener('click', ()=>overlay.remove());
+    overlay.querySelector('#sheetConfirm').addEventListener('click', ()=>{
+      const metros = recalc();
+      if(modo==='pallet' && ((parseFloat(cantidad.value)||0)<=0 || (parseFloat(longitud.value)||0)<=0)){
+        showToast('Introduce cantidad y longitud'); return;
+      }
+      if(modo==='suelto' && ((parseFloat(udsSueltas.value)||0)<=0 || (parseFloat(longitudSuelta.value)||0)<=0)){
+        showToast('Introduce unidades y longitud'); return;
+      }
+      const entries = loadEntries('productos', state.quarter);
+      entries.push({
+        id: Date.now(),
+        codigo: item.codigo, nombre: item.nombre,
+        modo: modo,
+        pallets: modo==='pallet' ? (parseFloat(pallets.value)||1) : null,
+        cantidad: modo==='pallet' ? (parseFloat(cantidad.value)||0) : (parseFloat(udsSueltas.value)||0),
+        longitud: modo==='pallet' ? (parseFloat(longitud.value)||0) : (parseFloat(longitudSuelta.value)||0),
+        metros: metros,
+        precioUnitario: precio,
+        valor: precio!=null ? metros*precio : null,
+        operario: state.operario||'',
+        fecha: new Date().toLocaleString('es-ES')
+      });
+      saveEntries('productos', state.quarter, entries);
+      overlay.remove();
+      renderAll();
+      showToast('Añadido: '+metros.toFixed(2)+' mL');
+    });
+
+  } else {
+    const tieneSacas = item.sacaOpciones && item.sacaOpciones.length>0;
+    overlay.innerHTML = `
+      <div class="sheet">
+        <div class="sheet-title">${escapeHtml(item.nombre)}</div>
+        <div class="sheet-sub">${item.codigo?escapeHtml(item.codigo):'sin código'}${precio!=null?' · '+precio.toLocaleString('es-ES',{minimumFractionDigits:2})+' €/kg':''}</div>
+        <div class="mode-toggle" style="${tieneSacas?'':'display:none;'}">
+          <button class="mode-btn active" data-mode="saca">Saca completa</button>
+          <button class="mode-btn" data-mode="suelto">Kilos sueltos</button>
+        </div>
+        <div id="modeSaca" style="${tieneSacas?'':'display:none;'}">
+          <div class="field-row">
+            <div class="field">
+              <label>Nº sacas</label>
+              <div class="stepper">
+                <button data-step="-1">–</button>
+                <input id="qSacas" type="number" value="1" min="1">
+                <button data-step="1">+</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Kg / saca</label>
+              <div class="chip-row" id="chipsSaca"></div>
+              <input id="qKgSaca" type="number" inputmode="decimal" placeholder="ej. 1250">
+            </div>
+          </div>
+        </div>
+        <div id="modeSueltoMP" style="${tieneSacas?'display:none;':''}">
+          <div class="field-row">
+            <div class="field"><label>Kilos sueltos</label><input id="qKgSueltos" type="number" inputmode="decimal" placeholder="ej. 12.5"></div>
+          </div>
+        </div>
+        <div class="calc-preview" id="calcPreview">0,00 kg</div>
+        <div class="sheet-actions">
+          <button class="btn btn-cancel" id="sheetCancel">Cancelar</button>
+          <button class="btn btn-confirm" id="sheetConfirm">Añadir</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const sacas = overlay.querySelector('#qSacas');
+    const kgSaca = overlay.querySelector('#qKgSaca');
+    const kgSueltos = overlay.querySelector('#qKgSueltos');
+    const modeSaca = overlay.querySelector('#modeSaca');
+    const modeSueltoMP = overlay.querySelector('#modeSueltoMP');
+    const preview = overlay.querySelector('#calcPreview');
+    let modo = tieneSacas ? 'saca' : 'suelto';
+
+    if(tieneSacas){
+      const chipsSaca = overlay.querySelector('#chipsSaca');
+      item.sacaOpciones.forEach((s,i)=>{
+        const chip = document.createElement('button');
+        chip.type='button'; chip.className='chip'+(i===0?' active':'');
+        chip.textContent = s+' kg';
+        chip.addEventListener('click', ()=>{
+          chipsSaca.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+          chip.classList.add('active');
+          kgSaca.value = s;
+          recalc();
+        });
+        chipsSaca.appendChild(chip);
+      });
+      kgSaca.value = item.sacaOpciones[0];
+    }
+
+    overlay.querySelectorAll('.mode-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        overlay.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        modo = btn.dataset.mode;
+        modeSaca.style.display = modo==='saca' ? 'block' : 'none';
+        modeSueltoMP.style.display = modo==='suelto' ? 'block' : 'none';
+        recalc();
+      });
+    });
+
+    function recalc(){
+      let kg;
+      if(modo==='saca'){
+        const s = parseFloat(sacas.value)||0;
+        const k = parseFloat(kgSaca.value)||0;
+        kg = s*k;
+      } else {
+        kg = parseFloat(kgSueltos.value)||0;
+      }
+      let txt = kg.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' kg';
+      if(precio!=null){
+        const valor = kg*precio;
+        txt += '   ·   '+valor.toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+      } else {
+        txt += '   ·   sin precio definido';
+      }
+      preview.textContent = txt;
+      return kg;
+    }
+    [sacas,kgSaca,kgSueltos].forEach(el=>el.addEventListener('input', recalc));
+    overlay.querySelectorAll('[data-step]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const d = parseInt(btn.dataset.step);
+        sacas.value = Math.max(1, (parseInt(sacas.value)||1)+d);
+        recalc();
+      });
+    });
+    recalc();
+
+    overlay.querySelector('#sheetCancel').addEventListener('click', ()=>overlay.remove());
+    overlay.querySelector('#sheetConfirm').addEventListener('click', ()=>{
+      const kg = recalc();
+      if(kg<=0){ showToast('Introduce los datos de kg'); return; }
+      const entries = loadEntries('mp', state.quarter);
+      entries.push({
+        id: Date.now(),
+        codigo: item.codigo, nombre: item.nombre,
+        modo: modo,
+        sacas: modo==='saca' ? (parseFloat(sacas.value)||0) : null,
+        kgPorSaca: modo==='saca' ? (parseFloat(kgSaca.value)||0) : null,
+        kg: kg,
+        precioUnitario: precio,
+        valor: precio!=null ? kg*precio : null,
+        operario: state.operario||'',
+        fecha: new Date().toLocaleString('es-ES')
+      });
+      saveEntries('mp', state.quarter, entries);
+      overlay.remove();
+      renderAll();
+      showToast('Añadido: '+kg.toFixed(2)+' kg');
+    });
+  }
+}
+
+/* ============ Render: tabla de conteos y totales ============ */
+const MODO_LABEL = {pallet:'Pallet', suelto:'Suelto', saca:'Saca'};
+function fmtEUR(v){
+  return v==null ? '—' : v.toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+}
+
+function renderEntriesAndTotals(){
+  const mod = state.activeModule;
+  const entries = loadEntries(mod, state.quarter);
+  const thead = entriesTable.querySelector('thead');
+  const tbody = entriesTable.querySelector('tbody');
+  thead.innerHTML=''; tbody.innerHTML='';
+
+  if(entries.length===0){
+    entriesEmpty.style.display='block';
+    entriesTable.style.display='none';
+  } else {
+    entriesEmpty.style.display='none';
+    entriesTable.style.display='table';
+  }
+
+  if(mod==='productos'){
+    thead.innerHTML = '<tr><th>Producto</th><th>Modo</th><th>Uds</th><th>mL</th><th>Valor</th><th>Operario</th><th></th></tr>';
+    entries.slice().reverse().forEach(e=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(e.nombre)}</td><td class="muted">${MODO_LABEL[e.modo]||''}</td><td>${e.cantidad}</td>
+        <td>${e.metros.toFixed(2)}</td><td>${fmtEUR(e.valor)}</td><td class="muted">${escapeHtml(e.operario||'—')}</td><td><button class="row-del" data-id="${e.id}">✕</button></td>`;
+      tbody.appendChild(tr);
+    });
+  } else {
+    thead.innerHTML = '<tr><th>Materia prima</th><th>Modo</th><th>Sacas</th><th>Kg</th><th>Valor</th><th>Operario</th><th></th></tr>';
+    entries.slice().reverse().forEach(e=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(e.nombre)}</td><td class="muted">${MODO_LABEL[e.modo]||''}</td><td>${e.sacas??'—'}</td>
+        <td>${e.kg.toFixed(2)}</td><td>${fmtEUR(e.valor)}</td><td class="muted">${escapeHtml(e.operario||'—')}</td><td><button class="row-del" data-id="${e.id}">✕</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  tbody.querySelectorAll('.row-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.id);
+      const remaining = loadEntries(mod, state.quarter).filter(e=>e.id!==id);
+      saveEntries(mod, state.quarter, remaining);
+      renderAll();
+    });
+  });
+
+  /* Totales agrupados */
+  const totThead = totalsTable.querySelector('thead');
+  const totTbody = totalsTable.querySelector('tbody');
+  totThead.innerHTML=''; totTbody.innerHTML='';
+  const groups = {};
+  let grand = 0, grandValor = 0, huboSinPrecio = false;
+
+  if(mod==='productos'){
+    totThead.innerHTML = '<tr><th>Producto</th><th>Pallets</th><th>mL</th><th>Valor</th></tr>';
+    entries.forEach(e=>{
+      groups[e.codigo] = groups[e.codigo] || {nombre:e.nombre, pallets:0, metros:0, valor:0};
+      groups[e.codigo].pallets += (e.pallets||0);
+      groups[e.codigo].metros += e.metros;
+      if(e.valor!=null) groups[e.codigo].valor += e.valor; else huboSinPrecio = true;
+    });
+    Object.values(groups).forEach(g=>{
+      grand += g.metros; grandValor += g.valor;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(g.nombre)}</td><td>${g.pallets||'—'}</td><td>${g.metros.toFixed(2)}</td><td>${fmtEUR(g.valor)}</td>`;
+      totTbody.appendChild(tr);
+    });
+    const trg = document.createElement('tr'); trg.className='grand';
+    trg.innerHTML = `<td>TOTAL GENERAL</td><td></td><td>${grand.toFixed(2)} mL</td><td>${fmtEUR(grandValor)}${huboSinPrecio?' *':''}</td>`;
+    totTbody.appendChild(trg);
+  } else {
+    totThead.innerHTML = '<tr><th>Materia prima</th><th>Sacas</th><th>Kg</th><th>Valor</th></tr>';
+    entries.forEach(e=>{
+      groups[e.codigo] = groups[e.codigo] || {nombre:e.nombre, sacas:0, kg:0, valor:0};
+      groups[e.codigo].sacas += (e.sacas||0);
+      groups[e.codigo].kg += e.kg;
+      if(e.valor!=null) groups[e.codigo].valor += e.valor; else huboSinPrecio = true;
+    });
+    Object.values(groups).forEach(g=>{
+      grand += g.kg; grandValor += g.valor;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(g.nombre)}</td><td>${g.sacas||'—'}</td><td>${g.kg.toFixed(2)}</td><td>${fmtEUR(g.valor)}</td>`;
+      totTbody.appendChild(tr);
+    });
+    const trg = document.createElement('tr'); trg.className='grand';
+    trg.innerHTML = `<td>TOTAL GENERAL</td><td></td><td>${grand.toFixed(2)} kg</td><td>${fmtEUR(grandValor)}${huboSinPrecio?' *':''}</td>`;
+    totTbody.appendChild(trg);
+  }
+}
+
+function renderAll(){
+  const mod = state.activeModule;
+  searchLabel.textContent = mod==='productos' ? 'Buscar producto' : 'Buscar materia prima';
+  entriesLabel.textContent = 'Conteos añadidos (este trimestre)';
+  totalsLabel.textContent = mod==='productos' ? 'Totales por producto' : 'Totales por materia prima';
+  renderItemList();
+  renderEntriesAndTotals();
+}
+
+/* ============ Tabs, búsqueda, quarter ============ */
+tabs.forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    tabs.forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    state.activeModule = tab.dataset.mod;
+    searchInput.value='';
+    renderAll();
+  });
+});
+searchInput.addEventListener('input', renderItemList);
+
+quarterInput.addEventListener('change', ()=>{
+  state.quarter = quarterInput.value.trim() || currentQuarterLabel();
+  try{ localStorage.setItem(LS.quarter, state.quarter); }catch(e){}
+  renderAll();
+});
+document.getElementById('btnResetQuarter').addEventListener('click', ()=>{
+  state.quarter = currentQuarterLabel();
+  quarterInput.value = state.quarter;
+  try{ localStorage.setItem(LS.quarter, state.quarter); }catch(e){}
+  renderAll();
+});
+
+/* ============ Importar lista maestra ============ */
+const importModal = document.getElementById('importModal');
+const importArea = document.getElementById('importArea');
+const importHint = document.getElementById('importHint');
+
+document.getElementById('btnImport').addEventListener('click', ()=>{
+  const mod = state.activeModule;
+  if(mod==='productos'){
+    importHint.innerHTML = 'Una línea por producto, formato: <b>codigo;nombre;precio;longitudes</b> — precio en €/mL (opcional) y longitudes en mm separadas por coma, ej. "5000,6000" (opcional, deja vacío si no aplica). Esto sustituye la lista actual de Productos.';
+    importArea.placeholder = 'OF26-001684;PANEL 333 GRECADO;3.20;5000,6000\nA-500;PANEL 500 LISO;2.85;';
+    importArea.value = loadMaster(mod).map(it=>[it.codigo,it.nombre,it.precio??'',(it.longitudes||[]).join(',')].join(';')).join('\n');
+  } else {
+    importHint.innerHTML = 'Una línea por materia prima, formato: <b>codigo;nombre;precio;sacas_kg</b> — precio en €/kg (opcional) y tamaños de saca en kg separados por coma, ej. "1800,1000" (deja vacío para materiales que solo se cuentan en kilos sueltos, como resinas/reciclados). Esto sustituye la lista actual de Materias primas.';
+    importArea.placeholder = 'PP-001;GRANZA PP NATURAL;1.15;1250\n11;RESINA ETINOX 631 F/N;0.93;';
+    importArea.value = loadMaster(mod).map(it=>[it.codigo,it.nombre,it.precio??'',(it.sacaOpciones||[]).join(',')].join(';')).join('\n');
+  }
+  importModal.style.display='flex';
+});
+document.getElementById('restoreCatalogBtn').addEventListener('click', ()=>{
+  const mod = state.activeModule;
+  const source = mod==='productos' ? CATALOGO_PRODUCTOS : CATALOGO_MATERIAS;
+  if(mod==='productos'){
+    importArea.value = source.map(it=>[it.codigo,it.nombre,it.precio??'',(it.longitudes||[]).join(',')].join(';')).join('\n');
+  } else {
+    importArea.value = source.map(it=>[it.codigo,it.nombre,it.precio??'',(it.sacaOpciones||[]).join(',')].join(';')).join('\n');
+  }
+  showToast('Catálogo completo cargado abajo — revisa y pulsa "Guardar lista"');
+});
+document.getElementById('importCancel').addEventListener('click', ()=> importModal.style.display='none');
+document.getElementById('importConfirm').addEventListener('click', ()=>{
+  const mod = state.activeModule;
+  const lines = importArea.value.split('\n').map(l=>l.trim()).filter(Boolean);
+  // conserva fotos de perfil ya guardadas, casando por código, al reimportar productos
+  const anterior = loadMaster(mod);
+  const porCodigo = {};
+  anterior.forEach(it=>{ if(it.codigo) porCodigo[it.codigo]=it; });
+
+  const list = lines.map(l=>{
+    const parts = l.split(';').map(p=>p.trim());
+    const codigo = parts[0]||'';
+    const nombre = parts[1]||parts[0]||'';
+    const precio = (parts[2]!==undefined && parts[2]!=='') ? parseFloat(parts[2].replace(',','.')) : null;
+    const opciones = (parts[3]||'').split(',').map(x=>parseFloat(x.replace(',','.'))).filter(x=>!isNaN(x)&&x>0);
+    const prev = codigo ? porCodigo[codigo] : null;
+    if(mod==='productos'){
+      const item = {_id: genId(), codigo, nombre, precio, longitudes: opciones};
+      if(prev && prev.perfil){ item.perfil = prev.perfil; item.perfilHash = prev.perfilHash; }
+      return item;
+    } else {
+      return {_id: genId(), codigo, nombre, precio, sacaOpciones: opciones};
+    }
+  });
+  saveMaster(mod, list);
+  importModal.style.display='none';
+  renderAll();
+  showToast('Lista actualizada ('+list.length+')');
+});
+
+/* ============ Guardar / Compartir Excel (puente Drive / OneDrive) ============ */
+document.getElementById('btnExport').addEventListener('click', async ()=>{
+  const mod = state.activeModule;
+  const entries = loadEntries(mod, state.quarter);
+  if(entries.length===0){ showToast('No hay datos que exportar'); return; }
+  if(typeof ExcelJS==='undefined'){ showToast('No se pudo cargar el generador de Excel — revisa la conexión'); return; }
+
+  let headers, rows, sumColIdx, valorColIdx;
+  if(mod==='productos'){
+    headers = ['Codigo','Nombre','Modo','Pallets','Cantidad','Longitud_mm','Metros_lineales','Precio_unitario','Valor','Operario','Fecha'];
+    rows = entries.map(e=>[
+      e.codigo, e.nombre, MODO_LABEL[e.modo]||'', e.pallets??null, e.cantidad??null, e.longitud??null,
+      Number(e.metros.toFixed(2)), e.precioUnitario??null, e.valor!=null?Number(e.valor.toFixed(2)):null,
+      e.operario||'', e.fecha
+    ]);
+    sumColIdx = 6; valorColIdx = 8;
+  } else {
+    headers = ['Codigo','Nombre','Modo','Sacas','Kg_por_saca','Kg_total','Precio_unitario','Valor','Operario','Fecha'];
+    rows = entries.map(e=>[
+      e.codigo, e.nombre, MODO_LABEL[e.modo]||'', e.sacas??null, e.kgPorSaca??null,
+      Number(e.kg.toFixed(2)), e.precioUnitario??null, e.valor!=null?Number(e.valor.toFixed(2)):null,
+      e.operario||'', e.fecha
+    ]);
+    sumColIdx = 5; valorColIdx = 7;
+  }
+  const precioColIdx = valorColIdx-1;
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(mod==='productos'?'Productos':'Materias primas');
+
+  ws.addTable({
+    name: 'TablaInventario',
+    ref: 'A1',
+    headerRow: true,
+    totalsRow: true,
+    style: { showRowStripes: true },
+    columns: headers.map((h,i)=>({
+      name: h,
+      totalsRowFunction: (i===sumColIdx || i===valorColIdx) ? 'sum' : 'none',
+      totalsRowLabel: (i===0) ? 'Total' : undefined
+    })),
+    rows: rows
+  });
+
+  // Cabecera: verde corporativo Extruplesa + Poppins (igual que vuestra plantilla)
+  ws.getRow(1).eachCell(cell=>{
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF00B050'}};
+    cell.font = {name:'Poppins', size:10};
+  });
+  // Poppins en el resto de filas (datos + fila de Total)
+  for(let r=2; r<=rows.length+2; r++){
+    ws.getRow(r).eachCell(cell=>{ cell.font = {name:'Poppins', size:10}; });
+  }
+  ws.getColumn(sumColIdx+1).numFmt = '#,##0.##';
+  ws.getColumn(precioColIdx+1).numFmt = '#,##0.00" €"';
+  ws.getColumn(valorColIdx+1).numFmt = '#,##0.00" €"';
+  ws.columns.forEach((col,i)=>{ col.width = i===1?28:14; });
+
+  const opTag = (state.operario||'operario').replace(/[^a-z0-9]+/gi,'_');
+  const filename = 'inventario_'+mod+'_'+state.quarter+'_'+opTag+'.xlsx';
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const file = new File([blob], filename, {type:blob.type});
+
+  // En móvil: abre el panel nativo de compartir para elegir Drive/OneDrive/Files.
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({
+        files:[file],
+        title:'Inventario '+mod+' '+state.quarter,
+        text:'Conteo de inventario trimestral - '+ (state.operario||'sin nombre')
+      });
+      showToast('Compartido correctamente');
+      return;
+    }catch(err){
+      if(err.name === 'AbortError') return; // el usuario canceló el panel
+      // si falla, cae al método de descarga normal de abajo
+    }
+  }
+
+  // Fallback (PC o navegadores sin Web Share con archivos): descarga normal.
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Descargado — muévelo a tu carpeta de Drive/OneDrive');
+});
+
+/* ============ Init ============ */
+renderAll();
+if(storageBroken){
+  setTimeout(()=>{
+    showToast('⚠️ Este navegador bloquea el guardado en este archivo — ábrelo desde un servidor local o instálalo como app');
+  }, 600);
+}
+</script>
+</body>
+</html>
